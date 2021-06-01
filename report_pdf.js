@@ -26,7 +26,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             } else if (type == 'vehicleTrailer') {
                 vehicleTrailer(rep);
             } else if (type == 'agroworkToday') {
-                agroworkToday(rep);
+                agroworkToday(rep, params);
             } else if (type == 'agroworkConsolidated') {
                 agroworkConsolidated(rep, params);
             } else if (type == 'agrooperationMaterials') {
@@ -125,6 +125,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 referenceVehicle(rep, params)
             } else if (type == 'trackerStatus') {
                 trackerStatus(rep, params)
+            } else if (type == 'landBankAnalytic') {
+                landBankAnalytic(rep)
             } else {
                 console.log("Not Found " + type)
             }
@@ -1803,7 +1805,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     for (var i = 0; i < rep.byFuel.stopPointList.length; i++) {
                         var stop = rep.byFuel.stopPointList[i];
                         params.scope.loadAddress(stop.stopPoint)
-//                         console.log(stop.stopPoint.address)
                         var last_element = rep.byFuel.stopPointList.length - 1
                         if (!stop.stopPoint.address) {
                             break;
@@ -1828,12 +1829,11 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         params.scope.loadAddress(reportDetail.firstPoint)
                         params.scope.loadAddress(reportDetail.lastPoint)
                         var last_element = rep.byTrip.reportDetailList.length - 1
-//                         console.log(rep.byTrip.reportDetailList[last_element].lastPoint.address)
+
                         if (!reportDetail.firstPoint.address && !reportDetail.lastPoint.address) {
                             break;
                         } else if (reportDetail.firstPoint.address && reportDetail.lastPoint.address && rep.byTrip.reportDetailList[last_element].lastPoint.address != undefined) {
                             myTripVar = clearInterval(myTripVar)
-                            console.log('stop trip')
                             console.timeEnd('TripAddress');
                             break;
                         }
@@ -1857,7 +1857,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             break;
                         } else if (parking.stopPoint.address && rep.byFuel.parkingPointList[last_element].stopPoint.address != undefined && !myStoppingVar && !myTripVar) {
                             generateData(rep, params, func);
-                            console.log('stop')
                             myParkingVar = clearInterval(myParkingVar)
                             console.timeEnd('parkingAddress');
                             break;
@@ -2719,6 +2718,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             }
         }
 
+//Шляховий лист
         function waybill(rep, func) {
             var table_body = []
             var content_detail = [];
@@ -2776,7 +2776,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 color: '#444',
                 margin: [0, 0, 0, 20],
                 table: {
-                    widths: ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto"],
+                    widths: [50, 50, 110, 50, 110, 100, 50, 50, 50, 50],
                     heights: 20,
                     headersRows: 2,
                     body: table_body,
@@ -2784,12 +2784,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     dontBreakRows: true,
                 },
             })
-
-            content_detail.push({
-                "width": "570",
-                "image": charts["fuelChart"].exportedImage,
-                //"fit": [350, 400]
-            });
 
 
             var content = {
@@ -2801,7 +2795,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 },
                 footer: {
                     columns: [
-                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, -15, 25, 0]}
+                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, -15, 25, 10]}
                     ]
                 },
                 pageMargins: [35, 20, 25, 45],
@@ -2911,11 +2905,11 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 } else {
                     var list = report_header.clusterList;
                     list.sort(function (a, b) {
-                        console.log(a.main.name)
-                        if ($filter('translate')(a.main.name) < $filter('translate')(b.main.name)) {
+
+                        if ($filter('translate')(a.main ? a.main.name : '') < $filter('translate')(b.main? b.main.name : '')) {
                             return -1;
                         }
-                        if ($filter('translate')(a.main.name) > $filter('translate')(b.main.name)) {
+                        if ($filter('translate')(a.main ? a.main.name : '') > $filter('translate')(b.main ? b.main.name : '')) {
                             return 1;
                         }
                         return 0;
@@ -2963,7 +2957,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     } else {
                         table_body.push([
                             {
-                                'text': $filter('translate')(cluster_list.main.name),
+                                'text': $filter('translate')(cluster_list.main ? cluster_list.main.name : ''),
                                 bold: 'true',
                                 italics: 'true',
                                 style: 'header',
@@ -3198,7 +3192,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             for (var i = 0; i < rep.length; i++) {
                 var report = rep[i]
-                console.log(report)
+
                 if (report.is_manual == false) {
                     table_body.push([
                         {'text': $filter('translate')(report.vehicle.name), bold: 'true', style: 'td'},
@@ -3299,7 +3293,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         }
 
 //Агро работы
-        function agroworkToday(rep, func) {
+        function agroworkToday(rep, params, func) {
             var table_body = [];
             var content_detail = [];
 
@@ -3310,7 +3304,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {
                         'text': $filter('translate')(report_header.workType.name),
                         border: [false, false, false, false],
-                        margin: [-15, 0, 0, 0],
+                        margin: [-5, 0, 0, 0],
                         bold: 'true',
                         style: 'header',
                         fontSize: 10,
@@ -3335,7 +3329,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {
                                 'text': $filter('translate')(rep.claster_name),
                                 border: [false, false, false, false],
-                                margin: [-10, 0, 0, 0],
+                                margin: [5, 0, 0, 0],
                                 bold: 'true',
                                 style: 'header',
                                 colSpan: 3,
@@ -3354,12 +3348,13 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     } else {
                         table_body.push([
                             {
-                                'text': $filter('translate')(cluster_list.main.name),
+                                'text': $filter('translate')((cluster_list.main? cluster_list.main.name : '')),
                                 bold: 'true',
                                 style: 'header',
                                 colSpan: 3,
                                 border: [false, false, false, false],
-                                margin: [-10, 0, 0, 0],
+                                margin: [-5, 0, 0, 0],
+                                italics: true
                             },
                             {},
                             {},
@@ -3369,6 +3364,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 style: 'header',
                                 colSpan: 2,
                                 border: [false, false, false, false],
+                                italics: true
                             },
                             {}]);
                     }
@@ -3426,7 +3422,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             colSpan: 3,
                             color: 'black',
                             alignment: "right",
-                            border: [true, true, false, true]
+                            border: [true, true, true, true]
                         },
                         {},
                         {},
@@ -3454,9 +3450,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             content_detail.push(
                 {
                     color: '#444',
-                    margin: [0, 0, 0, 20],
+                    margin: [0, 0, 0, 0],
                     table: {
-                        widths: ["auto", "auto", "auto", "auto", "auto"],
+                        widths: [140, 80, 80, 80, 80],
                         heights: 20,
                         body: table_body,
                         alignment: 'center',
@@ -3490,7 +3486,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         'text': $filter('date')(rep.date, 'dd.MM.yyyy HH:mm:ss'),
                         alignment: 'center',
                         bold: 'true',
-                        margin: [0, 0, 0, 20]
+                        margin: [0, 0, 0, 0]
                     },
                     content_detail
                 ],
@@ -3576,10 +3572,10 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     } else {
                         var list = rep_data.clusterList;
                         list.sort(function (a, b) {
-                            if ($filter('translate')(a.main.name) < $filter('translate')(b.main.name)) {
+                            if ($filter('translate')(a.main ? a.main.name : '') < $filter('translate')(b.main ? b.main.name : '')) {
                                 return -1;
                             }
-                            if ($filter('translate')(a.main.name) > $filter('translate')(b.main.name)) {
+                            if ($filter('translate')(a.main ? a.main.name : '') > $filter('translate')(b.main ? b.main.name : '')) {
                                 return 1;
                             }
                             return 0;
@@ -3617,7 +3613,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     } else {
                         table_body.push([
                             {
-                                'text': $filter('translate')(cluster_list.main.name),
+                                'text': $filter('translate')(cluster_list.main ? cluster_list.main.name : ''),
                                 bold: 'true',
                                 italics: 'true',
                                 style: 'header',
@@ -3864,7 +3860,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                         //Добрива
                         for (var f = 0; f < report_detail.agrooperation.materialFertilizerList.length; f++) {
-                            var fertilizer = report_detail.agrooperation.materialFertilizerList[f]
+                            var fertilizer = report_detail.agrooperation.materialFertilizerList[f];
                             if (fertilizer.fertilizerRatePlan == 0 && fertilizer.fertilizerRateFact == 0) {
                                 var fertilizerRatePlan = {'text': '', style: 'td'}
                                 var fertilizerRatePlan_square = {'text': '', style: 'td'}
@@ -3875,21 +3871,21 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 var fertilizerRatePlan = {'text': '', style: 'td'}
                                 var fertilizerRatePlan_square = {'text': '', style: 'td'}
                                 var fertilizerRateFact = {
-                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 2),
+                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 3),
                                     style: 'td',
                                     alignment: 'center',
                                 }
                                 var fertilizerRateFact_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact, 2),
+                                    'text': $filter('number')(report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact, 3),
                                     style: 'td'
                                 }
                             } else if (fertilizer.fertilizerRateFact == 0) {
                                 var fertilizerRatePlan = {
-                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 2),
+                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 3),
                                     style: 'td'
                                 }
                                 var fertilizerRatePlan_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 2),
+                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 3),
                                     style: 'td'
                                 }
                                 var fertilizerRateFact = {'text': ''}
@@ -3897,15 +3893,15 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                             } else {
                                 var fertilizerRatePlan = {
-                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 2),
+                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 3),
                                     style: 'td'
                                 }
                                 var fertilizerRatePlan_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 2),
+                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 3),
                                     style: 'td'
                                 }
                                 var fertilizerRateFact = {
-                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 2),
+                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 3),
                                     style: 'td',
                                     alignment: 'center',
                                 }
@@ -3915,7 +3911,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 }
                             }
                             tmc_fertilizer_table.push([
-                                {'text': fertilizer.fertilizer.name, style: 'td'},
+                                {'text': $filter('translate')(fertilizer.fertilizer.name), style: 'td'},
                                 {'text': fertilizer.store.name, style: 'td'},
                                 fertilizerRatePlan,
                                 fertilizerRatePlan_square,
@@ -3961,12 +3957,12 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                     {},
                                     {},
                                     {
-                                        'text': $filter('number')(seed.seedRateFact, 2),
+                                        'text': $filter('number')(seed.seedRateFact, 3),
                                         style: 'td',
                                         alignment: 'center',
                                     },
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 3),
                                         style: 'td',
                                     },
                                     {
@@ -3982,9 +3978,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 tmc_seed_table.push([
                                     {'text': seed.seed.name, style: 'td'},
                                     {'text': seed.store.name, style: 'td'},
-                                    {'text': $filter('number')(seed.seedRatePlan, 2), style: 'td'},
+                                    {'text': $filter('number')(seed.seedRatePlan, 3), style: 'td'},
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 3),
                                         style: 'td',
                                     },
                                     {},
@@ -4002,18 +3998,18 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 tmc_seed_table.push([
                                     {'text': seed.seed.name, style: 'td'},
                                     {'text': seed.store.name, style: 'td'},
-                                    {'text': $filter('number')(seed.seedRatePlan, 2), style: 'td'},
+                                    {'text': $filter('number')(seed.seedRatePlan, 3), style: 'td'},
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 3),
                                         style: 'td',
                                     },
                                     {
-                                        'text': $filter('number')(seed.seedRateFact, 2),
+                                        'text': $filter('number')(seed.seedRateFact, 3),
                                         style: 'td',
                                         alignment: 'center',
                                     },
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 3),
                                         style: 'td',
                                     },
                                     {
@@ -4054,12 +4050,12 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                     {},
                                     {},
                                     {
-                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 2),
+                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 3),
                                         style: 'td',
                                         alignment: 'center',
                                     },
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact, 3),
                                         style: 'td',
                                     },
                                     {
@@ -4076,11 +4072,11 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                     {'text': plantProtector.plantProtector.name, style: 'td'},
                                     {'text': plantProtector.store.name, style: 'td'},
                                     {
-                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 2),
+                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 3),
                                         style: 'td'
                                     },
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 3),
                                         style: 'td',
                                     },
                                     {},
@@ -4099,15 +4095,15 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                     {'text': plantProtector.plantProtector.name, style: 'td'},
                                     {'text': plantProtector.store.name, style: 'td'},
                                     {
-                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 2),
+                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 3),
                                         style: 'td'
                                     },
                                     {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 2),
+                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 3),
                                         style: 'td',
                                     },
                                     {
-                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 2),
+                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 3),
                                         style: 'td',
                                         alignment: 'center',
                                     },
@@ -4267,14 +4263,14 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         {},
                         {},
                         {
-                            'text': $filter('number')(params.scope.getTotal(cluster_list.detail, 'square'), 2),
+                            'text': $filter('number')(params.scope.getTotal(cluster_list.detail, 'square'), 3),
                             border: [false, false, false, true],
                             style: 'header',
                             alignment: 'right'
                         },
                         {},
                         {
-                            'text': $filter('number')(params.scope.getTotalTmc(cluster_list.detail), 2),
+                            'text': $filter('number')(params.scope.getTotalTmc(cluster_list.detail), 3),
                             border: [false, false, true, true],
                             style: 'header',
                             alignment: 'center'
@@ -4439,7 +4435,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     table_seed1.push([
                         {'text': $filter('translate')(item_seed.seed.name), style: 'td', alignment: 'left'},
                         {
-                            'text': $filter('number')(item_seed.seedRateFact, 2) + " " + unit,
+                            'text': $filter('number')(item_seed.seedRateFact, 3) + " " + unit,
                             style: 'td'
                         },
                         {'text': $filter('number')(item_seed.square, 2), style: 'td'},
@@ -4539,7 +4535,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             alignment: 'left'
                         },
                         {
-                            'text': $filter('number')(item_fertilizers.fertilizerRateFact, 2) + " " + unit,
+                            'text': $filter('number')(item_fertilizers.fertilizerRateFact, 3) + " " + unit,
                             style: 'td'
                         },
                         {'text': $filter('number')(item_fertilizers.square, 2), style: 'td'},
@@ -4638,7 +4634,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             alignment: 'left'
                         },
                         {
-                            'text': $filter('number')(item_plant_protector.plantProtectorRateFact, 2) + " " + unit,
+                            'text': $filter('number')(item_plant_protector.plantProtectorRateFact, 3) + " " + unit,
                             style: 'td'
                         },
                         {'text': $filter('number')(item_plant_protector.square, 2), style: 'td'},
@@ -5575,7 +5571,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function byAzsBalances(rep, params, func) {
             var table_body = [];
             var content_detail = [];
-            console.log(rep.repDetail)
+
             rep.repDetail.sort(function (a, b) {
                 if ($filter('lowercase')(a.azs_name) < $filter('lowercase')(b.azs_name)) {
                     return -1;
@@ -5738,7 +5734,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                 for (var i = 0; i < rep.repDetail.length; i++) {
                     var detail = rep.repDetail[i];
-                    console.log(detail)
+
                     table_body.push([
                         {'text': $filter('date')(detail.tm * 1000, 'dd.MM.yyyy HH:mm:ss'), style: 'td'},
                         {'text': detail.azs_name, style: 'td'},
@@ -6307,7 +6303,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function byVehicleAssign(rep, func) {
             var table_body = [];
             var content_detail = [];
-            console.log(rep)
             rep.repDetail.sort(function (a, b) {
                 if (a.tm < b.tm) {
                     return -1;
@@ -6431,7 +6426,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function controlUnloadingPlace(rep, func) {
             var table_body = [];
             var content_detail = [];
-            console.log(rep)
             rep.repDetail.sort(function (a, b) {
                 if (a.tm < b.tm) {
                     return -1;
@@ -6559,7 +6553,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function byCombine(rep, params, func) {
             var table_body = [];
             var content_detail = [];
-            console.log(rep)
             rep.repDetail.sort(function (a, b) {
                 if (a.tm < b.tm) {
                     return -1;
@@ -7547,9 +7540,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function grainToFarm(rep, func) {
             var table_body = [];
             var content_detail = [];
-//             console.log(rep.repData)
             rep.repData.sort(function (a, b) {
-                console.log(a.tmFarm)
                 if (a.tmFarm == null) {
                     return 1;
                 } else if (b.tmFarm == null) {
@@ -7605,7 +7596,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     var tmFarm = {'text': '', style: 'td'}
                 }
 
-//                 console.log(data)
 
                 table_body.push([
                     {'text': $filter('date')(data.tmUnloading * 1000, 'dd.MM.yyyy HH:mm:ss'), style: 'td'},
@@ -9121,7 +9111,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                 for (var i = 0; i < rep.reportDetailList.length; i++) {
                     var reportDetail = rep.reportDetailList[i]
-                    console.log($filter('number')(reportDetail.fuel_used, 2))
                     table1_body.push([
                         {'text': $filter('date')(reportDetail.time_in_field * 1000, 'dd.MM.yyyy'), style: 'td'},
                         {'text': $filter('number')(reportDetail.distance, 2), style: 'td'},
@@ -9243,7 +9232,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             var table_body = [];
             var table1_body = [];
             var content_detail = [];
-            console.log(rep)
             table_body.push([
                 {'text': $filter('translate')('field'), style: 'tableHeader'},
                 {'text': $filter('translate')('square'), style: 'tableHeader'},
@@ -9565,7 +9553,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             var table_body = [];
             var table1_body = [];
             var content_detail = [];
-            console.log(rep)
             rep.reportDetail.sort(function (a, b) {
                 if (a.vehicle_name < b.vehicle_name) {
                     return -1;
@@ -12431,8 +12418,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         {'text': $filter('number')(rep.geozone_total - rep.working_total, 2), style: 'header'}
                     ]);
 
-
-                    console.log(rep)
                     content_detail.push(
                         {
                             'text': $filter('translate')('reportType') + " " + $filter('translate')('report.agrooperation.workType'),
@@ -13389,7 +13374,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('lon'), style: 'tableHeader'},
                 {'text': $filter('translate')('tab.params'), style: 'tableHeader'},
             ]);
-            console.log(rep)
             for (var i = 0; i < rep.pointList.length; i++) {
                 var point = rep.pointList[i];
                 table_body.push([
@@ -13491,7 +13475,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('phone'), style: 'tableHeader'},
                 {'text': $filter('translate')('group'), style: 'tableHeader'}
             ]);
-            console.log(rep)
             for (var i = 0; i < rep.dataList.length; i++) {
                 var data = rep.dataList[i];
                 table_body.push([
@@ -13589,7 +13572,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('group'), style: 'tableHeader'},
                 {'text': $filter('translate')('trailer.is_auto'), style: 'tableHeader'}
             ]);
-            console.log(rep)
             for (var i = 0; i < rep.dataList.length; i++) {
                 var data = rep.dataList[i];
                 var cardsCode = [];
@@ -13931,6 +13913,343 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         color: 'black',
                         fontSize: 8,
                         fillColor: '#F2DEDE',
+                    }
+                }
+            };
+
+            if (func) {
+                const pdfDocGenerator = pdfMake.createPdf(content);
+                pdfDocGenerator.getBase64((data) => {
+                    func.call(this, data);
+                });
+            } else {
+                cratePdf(content);
+            }
+        }
+
+//Земельный банк
+        function landBankAnalytic(rep, func) {
+            let table2_body = [];
+            let table_body = [];
+            let content_detail = [];
+            let table_image = [];
+
+            table_body.push([
+                {'text': $filter('translate')('name'), style: 'tableHeader'},
+                {'text': $filter('translate')('quantity.share'), style: 'tableHeader'},
+                {'text': $filter('translate')('square.share'), style: 'tableHeader'},
+                {'text': '%', style: 'tableHeader'},
+            ]);
+
+            table2_body.push([
+                {'text': $filter('translate')('name'), style: 'tableHeader', rowSpan: 2},
+                {'text': $filter('translate')('square'), style: 'tableHeader', rowSpan: 2},
+                {'text': $filter('translate')('field.integrity'), style: 'tableHeader', rowSpan: 2},
+                {'text': $filter('translate')('field.integrity.including'), style: 'tableHeader', colSpan: 3},
+                {},
+                {},
+                {'text': $filter('translate')('dogovor.stability'), style: 'tableHeader', colSpan: 3},
+                {},
+                {},
+            ]);
+
+
+            table2_body.push([
+                {},
+                {},
+                {},
+                {'text': $filter('translate')('by.dogovor'), style: 'tableHeader'},
+                {'text': $filter('translate')('by.exchanges'), style: 'tableHeader'},
+                {'text': $filter('translate')('illegally.square'), style: 'tableHeader'},
+                {'text': $filter('translate')('dogovor.stability.6'), style: 'tableHeader'},
+                {'text': $filter('translate')('dogovor.stability.12'), style: 'tableHeader'},
+                {'text': $filter('translate')('dogovor.stability.36'), style: 'tableHeader'},
+            ]);
+
+
+            let qnt = 0;
+            let square = 0;
+            let percent = 0;
+
+            rep.analyticsTenantList.sort(function (a, b) {
+                if (a.square < b.square) {
+                    return -1;
+                }
+                if (a.square < b.square) {
+                    return 1;
+                }
+                return 0;
+            });
+
+            for (var i = 0; i < rep.analyticsTenantList.length; i++) {
+                var item = rep.analyticsTenantList[i];
+                qnt = qnt + item.qnt
+                square = square + item.square
+                percent = percent + item.percent
+                table_body.push([
+                    {'text': item.bankOrganization.name, style: 'tdName'},
+                    {'text': item.qnt, style: 'td'},
+                    {'text': $filter('number')(item.square, 2), style: 'td'},
+                    {'text': $filter('number')(item.percent, 2), style: 'td'},
+
+                ]);
+            }
+
+            table_body.push([
+                {'text': $filter('translate')('total'), style: 'tableHeader'},
+                {'text': qnt, style: 'tableHeader'},
+                {'text': $filter('number')(square, 2), style: 'tableHeader'},
+                {'text': $filter('number')(percent, 0), style: 'tableHeader'},
+
+            ]);
+
+
+            for (var i = 0; i < rep.analyticsGeozoneList.length; i++) {
+                var item = rep.analyticsGeozoneList[i];
+
+                if (rep.analyticsGeozoneData === "percent") {
+                    table2_body.push([
+                        {'text': item.geozone ? item.geozone.name : '', style: 'tdName'},
+                        {'text': $filter('number')(item.square, 2) + " " + $filter('translate')("ha"), style: 'td'},
+                        {'text': $filter('number')(item.total_square_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.legally_square_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.legally_square_contractor_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.illegally_square_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.dogovor_stability_6_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.dogovor_stability_12_percent, 1) + ' %', style: 'td'},
+                        {'text': $filter('number')(item.dogovor_stability_36_percent, 1) + ' %', style: 'td'},
+                    ]);
+                } else {
+                    table2_body.push([
+                        {'text': item.geozone ? item.geozone.name : '', style: 'tdName'},
+                        {'text': $filter('number')(item.square, 2) + " " + $filter('translate')("ha"), style: 'td'},
+                        {
+                            'text': $filter('number')(item.total_square, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.legally_square, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.legally_square_contractor, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.illegally_square, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.dogovor_stability_6, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.dogovor_stability_12, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                        {
+                            'text': $filter('number')(item.dogovor_stability_36, 4) + " " + $filter('translate')("ha"),
+                            style: 'td'
+                        },
+                    ]);
+                }
+            }
+
+            if (rep.analyticsGeozoneData === "percent") {
+                table2_body.push([
+                    {
+                        'text': $filter('translate')('total') + ": " + rep.analyticsGeozone.detailList.length,
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.square, 2) + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.total_square_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.legally_square_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.legally_square_contractor_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.illegally_square_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_6_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_12_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_36_percent, 1) + ' %',
+                        style: 'tableHeader'
+                    },
+                ]);
+            } else {
+                table2_body.push([
+                    {
+                        'text': $filter('translate')('total') + ": " + rep.analyticsGeozone.detailList.length,
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.square, 2) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.total_square, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.legally_square, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.legally_square_contractor, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.illegally_square, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_6, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_12, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                    {
+                        'text': $filter('number')(rep.analyticsGeozone.dogovor_stability_36, 4) + " " + $filter('translate')("ha"),
+                        style: 'tableHeader'
+                    },
+                ]);
+            }
+
+            table_image.push([
+                {
+                    image: rep.geozoneChart.image,
+                    width: 300,
+                    left: 40,
+                    height: 170,
+                    border: [false, false, false, false],
+                },
+                {
+                    image: rep.contractChart.image,
+                    width: 300,
+                    left: 60,
+                    height: 170,
+                    border: [false, false, false, false],
+                },
+            ])
+
+            let width = rep.tenantChart.width;
+            let height = rep.tenantChart.height;
+            if(rep.tenantChart.height>800){
+                height = 800
+                width = (height /rep.tenantChart.height)* rep.tenantChart.width
+            }
+
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('consolidated.by.tenant'),
+                    alignment: 'center',
+                    bold: 'true',
+                },
+                {
+                    color: '#444',
+                    margin: [10, 20, 0, 0],
+                    table: {
+                        widths: [250, 90, 80, 70],
+                        heights: 20,
+                        body: table_body,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                },
+                {
+                    image: rep.tenantChart.image,
+                    width: width,
+                    height: height,
+                    alignment: 'left',
+                    pageBreak: 'after',
+                },
+                {
+                    'text': $filter('translate')('consolidated.by.geozones'),
+                    margin: [0, 20, 0, 0],
+                    alignment: 'center',
+                    bold: 'true',
+                },
+                {
+                    table: {
+                        body: table_image,
+                        textAlign: 'left',
+                        dontBreakRows: true,
+                    },
+                },
+                {
+                    color: '#444',
+                    margin: [0, 20, 0, 20],
+                    table: {
+                        widths: [100, 50, 50, 50, 40, 50, 50, 40, 50],
+                        heights: 20,
+                        body: table2_body,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                })
+
+            var content = {
+                info: {
+                    title: 'Agrocontrol',
+                    author: 'Agrocontrol',
+                    subject: '',
+                    keywords: '',
+                },
+                footer: {
+                    columns: [
+                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, 0, 20, 5]}
+                    ]
+                },
+                pageMargins: [20, 10, 20, 10],
+                extend: 'pdfHtml5',
+                pageSize: 'A4',
+                content: [
+                    content_detail
+                ],
+                styles: {
+                    tableHeader: {
+                        alignment: 'center',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    td: {
+                        alignment: 'center',
+                        height: '100',
+                        fontSize: 8
+                    },
+                    header: {
+                        fontSize: 9,
+                        bold: 'true',
+                        color: 'black',
+                        alignment: 'center'
+                    },
+                    tdName: {
+                        alignment: 'left',
+                        height: '100',
+                        fontSize: 8
                     }
                 }
             };
