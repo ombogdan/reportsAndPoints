@@ -61,6 +61,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                             break;
                         case "agrooperationWorkType":
                             postData.data = this.agrooperationWorkType(data.data, callScope);
+
                             postData.params = {
                                 reportType: $filter('translate')('report.agrooperation.workType'),
                                 date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
@@ -95,10 +96,14 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "agroworkConsolidated":
                             postData.data = this.agroworkConsolidated(data.data, callScope);
                             postData.params = {
-                                reportName: $filter('translate')('report.agrowork.consolidated'),
+                                translate:{
+                                    reportName: $filter('translate')('report.agrowork.consolidated'),
+                                    processed_by_period: $filter('translate')('processed.by.period')
+                                },
                                 date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
                                 date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss')
                             }
+                            console.log(JSON.stringify(postData))
                             break;
                         default:
                             postData = {}
@@ -411,14 +416,15 @@ angular.module('agro.utils.xls', ['ngResource'])
                     });
                     for (var l = 0; l < data.repData.length; l++) {
                         var rep_data = data.repData[l];
+                        rep_data['workTypeName'] = $filter('translate')(rep_data.workType.name);
                         for (var k = 0; k < rep_data.clusterList.length; k++) {
                             if (!data.claster_name) {
                                 var list = rep_data.clusterList;
                                 list.sort(function (a, b) {
-                                    if ($filter('translate')(a.main.name) < $filter('translate')(b.main.name)) {
+                                    if ($filter('translate')(a.main ? a.main.name : '') < $filter('translate')(b.main ? b.main.name : '')) {
                                         return -1;
                                     }
-                                    if ($filter('translate')(a.main.name) > $filter('translate')(b.main.name)) {
+                                    if ($filter('translate')(a.main ? a.main.name : '') > $filter('translate')(b.main ? b.main.name : '')) {
                                         return 1;
                                     }
                                     return 0;
@@ -428,104 +434,99 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 if (data.claster_name) {
                                     cluster_list['clusterName'] = data.claster_name;
                                 } else {
-                                    cluster_list['clusterName'] = cluster_list.main.name
+                                    cluster_list['clusterName'] = cluster_list.main ? cluster_list.main.name : '';
                                 }
+
 
                                 for (var d = 0; d < cluster_list.detail.length; d++) {
                                     var report_detail = cluster_list.detail[d]
-                                    cluster_list['factDateStartExel'] = $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss');
-                                    cluster_list['factDateEndExel'] = $filter('date')(report_detail.agrooperation.fact_date_end, 'dd.MM.yyyy HH:mm:ss');
-                                    cluster_list['processed_percent'] = report_detail.agrooperation.fact_square / report_detail.agrooperation.plan_square * 100;
+                                    report_detail['factDateStartExel'] = $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss')!== null ? $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss') : '';
+                                    report_detail['factDateEndExel'] = $filter('date')(report_detail.agrooperation.fact_date_end, 'dd.MM.yyyy HH:mm:ss') !== null ? $filter('date')(report_detail.agrooperation.fact_date_end, 'dd.MM.yyyy HH:mm:ss') : '';
+                                    report_detail['processed_percent'] = report_detail.agrooperation.fact_square / report_detail.agrooperation.plan_square * 100;
+                                    report_detail.agrooperation.fact_square = report_detail.agrooperation.fact_square ? report_detail.agrooperation.fact_square : '';
+
+                                    if(report_detail.agrooperation.materialSeedList.length>0){
+                                        report_detail['seedTranslate'] = [{
+                                            plant_protector: $filter('translate')('seed'),
+                                            plan: $filter('translate')('plan'),
+                                            fact: $filter('translate')('fact'),
+                                            material_unit_price: $filter('translate')('material.unit.price'),
+                                            material_full_price: $filter('translate')('material.full.price'),
+                                            material_total: $filter('translate')('material.total'),
+                                            material_rate: $filter('translate')('material.rate')
+                                        }]
+
+                                    }else{
+                                        report_detail['plantProtectorTranslate'] = []
+                                    }
+                                    if(report_detail.agrooperation.materialFertilizerList.length>0){
+                                        report_detail['fertilizerTranslate'] = [{
+                                            plant_protector: $filter('translate')('fertilizer'),
+                                            plan: $filter('translate')('plan'),
+                                            fact: $filter('translate')('fact'),
+                                            material_unit_price: $filter('translate')('material.unit.price'),
+                                            material_full_price: $filter('translate')('material.full.price'),
+                                            material_total: $filter('translate')('material.total'),
+                                            material_rate: $filter('translate')('material.rate')
+                                        }]
+
+                                    }else{
+                                        report_detail['plantProtectorTranslate'] = []
+                                    }
+                                    if(report_detail.agrooperation.materialPlantProtectorList.length>0){
+                                        report_detail['plantProtectorTranslate'] = [{
+                                            plant_protector: $filter('translate')('plant_protector'),
+                                            plan: $filter('translate')('plan'),
+                                            fact: $filter('translate')('fact'),
+                                            material_unit_price: $filter('translate')('material.unit.price'),
+                                            material_full_price: $filter('translate')('material.full.price'),
+                                            material_total: $filter('translate')('material.total'),
+                                            material_rate: $filter('translate')('material.rate')
+                                        }]
+
+                                    }else{
+                                        report_detail['plantProtectorTranslate'] = []
+                                    }
 
                                     for (var f = 0; f < report_detail.agrooperation.materialFertilizerList.length; f++) {
-                                        var fertilizer = cluster_list.detail.agrooperation.materialFertilizerList[f];
-                                        if (fertilizer.fertilizerRatePlan == 0 && fertilizer.fertilizerRateFact == 0) {
-                                            fertilizer['fertilizerRatePlan'] = "";
-                                            fertilizer['fertilizerRatePlan_square'] = ""
-                                            fertilizer['fertilizerRateFact'] = ""
-                                            fertilizer['fertilizerRateFact_square'] = ""
+                                        var fertilizer = report_detail.agrooperation.materialFertilizerList[f];
+                                        fertilizer['fertilizerRatePlan'] = fertilizer.fertilizerRatePlan !== 0 &&  fertilizer.fertilizerRatePlan ? fertilizer.fertilizerRatePlan : '';
+                                        fertilizer['fertilizerRatePlan_square'] = (report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan !== 0 && report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan) ? report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan : '';
+                                        fertilizer['fertilizerRateFact'] = (fertilizer.fertilizerRateFact !==0 && fertilizer.fertilizerRateFact) ? fertilizer.fertilizerRateFact : ''
+                                        fertilizer['fertilizerRateFact_square'] = (report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact !==0 && report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact) ? report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact : '';
 
-                                        } else if (fertilizer.fertilizerRatePlan == 0) {
-                                            fertilizer['fertilizerRatePlan'] = ""
-                                            fertilizer['fertilizerRatePlan_square'] = ""
-                                            fertilizer['fertilizerRateFact'] = fertilizer.fertilizerRateFact;
-                                            fertilizer['fertilizerRateFact_square'] = report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact
-
-                                        } else if (fertilizer.fertilizerRateFact == 0) {
-                                            fertilizer['fertilizerRatePlan'] = fertilizer.fertilizerRatePlan;
-                                            fertilizer['fertilizerRatePlan_square'] = report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan;
-                                            fertilizer['fertilizerRateFact'] = ""
-                                            fertilizer['fertilizerRateFact_square'] = ""
-
-                                        } else {
-                                            fertilizer['fertilizerRatePlan'] = fertilizer.fertilizerRatePlan
-                                            fertilizer['fertilizerRatePlan_square'] = report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan
-                                            fertilizer['fertilizerRateFact'] = fertilizer.fertilizerRateFact
-                                            fertilizer['fertilizerRateFact_square'] = report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact
-                                        }
                                         fertilizer['fertilizerTotalPrice'] = callScope.getFertilizerPrice(fertilizer, report_detail.agrooperation.fact_square);
                                         fertilizer['fertilizerName'] = $filter('translate')(fertilizer.fertilizer.name)
                                     }
 
+
+
                                     for (var p = 0; p < report_detail.agrooperation.materialPlantProtectorList.length; p++) {
-                                        var plantProtector = cluster_list.detail.agrooperation.materialPlantProtectorList[p];
-                                        if (plantProtector.plantProtectorRatePlan === 0 && plantProtector.plantProtectorRateFact === 0) {
-                                            plantProtector['plantProtectorRatePlan'] = "";
-                                            plantProtector['plantProtectorRatePlan_square'] = ""
-                                            plantProtector['plantProtectorRateFact'] = ""
-                                            plantProtector['plantProtectorRateFact_square'] = ""
+                                        var plantProtector = report_detail.agrooperation.materialPlantProtectorList[p];
+                                        plantProtector['plantProtectorRatePlan'] = plantProtector.plantProtectorRatePlan !== 0 &&  plantProtector.plantProtectorRatePlan ? plantProtector.plantProtectorRatePlan : '';
+                                        plantProtector['plantProtectorRatePlan_square'] = (report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan !== 0 && report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan) ? report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan : '';
+                                        plantProtector['plantProtectorRateFact'] = (plantProtector.plantProtectorRateFact !==0 && plantProtector.plantProtectorRateFact) ? plantProtector.plantProtectorRateFact : ''
+                                        plantProtector['plantProtectorRateFact_square'] = (report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact !==0 && report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact) ? report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact : '';
 
-                                        } else if (plantProtector.plantProtectorRatePlan === 0) {
-                                            plantProtector['plantProtectorRatePlan'] = ""
-                                            plantProtector['plantProtectorRatePlan_square'] = ""
-                                            plantProtector['plantProtectorRateFact'] = plantProtector.plantProtectorRateFact;
-                                            plantProtector['plantProtectorRateFact_square'] = report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact
-
-                                        } else if (plantProtector.plantProtectorRateFact === 0) {
-                                            plantProtector['plantProtectorRatePlan'] = plantProtector.plantProtectorRatePlan;
-                                            plantProtector['plantProtectorRatePlan_square'] = report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan;
-                                            plantProtector['plantProtectorRateFact'] = ""
-                                            plantProtector['plantProtectorRateFact_square'] = ""
-
-                                        } else {
-                                            plantProtector['plantProtectorRatePlan'] = plantProtector.plantProtectorRatePlan
-                                            plantProtector['plantProtectorRatePlan_square'] = report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan
-                                            plantProtector['plantProtectorRateFact'] = plantProtector.plantProtectorRateFact
-                                            plantProtector['plantProtectorRateFact_square'] = report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact
-                                        }
-                                        plantProtector['plantProtectorTotalPrice'] = callScope.getFertilizerPrice(plantProtector, report_detail.agrooperation.fact_square);
+                                        plantProtector['plantProtectorTotalPrice'] = callScope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square);
                                         plantProtector['plantProtectorName'] = $filter('translate')(plantProtector.plantProtector.name)
                                     }
 
                                     for (var s = 0; s < report_detail.agrooperation.materialSeedList.length; s++) {
-                                        var seed = cluster_list.detail.agrooperation.materialSeedList[s];
-                                        if (seed.seedRatePlan === 0 && seed.seedRateFact === 0) {
-                                            seed['seedRatePlan'] = "";
-                                            seed['seedRatePlan_square'] = ""
-                                            seed['seedRateFact'] = ""
-                                            seed['seedRateFact_square'] = ""
+                                        var seed = report_detail.agrooperation.materialSeedList[s];
+                                        seed['seedRatePlan'] = seed.seedRatePlan !== 0 &&  seed.seedRatePlan ? seed.seedRatePlan : '';
+                                        seed['seedRatePlan_square'] = (report_detail.agrooperation.plan_square * seed.seedRatePlan !== 0 && report_detail.agrooperation.plan_square * seed.seedRatePlan) ? report_detail.agrooperation.plan_square * seed.seedRatePlan : '';
+                                        seed['seedRateFact'] = (seed.seedRateFact !==0 && seed.seedRateFact) ? seed.seedRateFact : ''
+                                        seed['seedRateFact_square'] = (report_detail.agrooperation.fact_square * seed.seedRateFact !==0 && report_detail.agrooperation.fact_square * seed.seedRateFact) ? report_detail.agrooperation.fact_square * seed.seedRateFact : '';
 
-                                        } else if (seed.seedRatePlan === 0) {
-                                            seed['seedRatePlan'] = ""
-                                            seed['seedRatePlan_square'] = ""
-                                            seed['seedRateFact'] = seed.seedRateFact;
-                                            seed['seedRateFact_square'] = report_detail.agrooperation.fact_square * seed.seedRateFact
-
-                                        } else if (seed.seedRateFact === 0) {
-                                            seed['seedRatePlan'] = seed.seedRatePlan;
-                                            seed['seedRatePlan_square'] = report_detail.agrooperation.plan_square * seed.seedRatePlan;
-                                            seed['seedRateFact'] = ""
-                                            seed['seedRateFact_square'] = ""
-
-                                        } else {
-                                            seed['seedRatePlan'] = seed.seedRatePlan
-                                            seed['seedRatePlan_square'] = report_detail.agrooperation.plan_square * seed.seedRatePlan
-                                            seed['seedRateFact'] = seed.seedRateFact
-                                            seed['seedRateFact_square'] = report_detail.agrooperation.fact_square * seed.seedRateFact
-                                        }
-                                        seed['seedTotalPrice'] = callScope.getFertilizerPrice(seed, report_detail.agrooperation.fact_square)
+                                        seed['seedTotalPrice'] = callScope.getSeedPrice(seed, report_detail.agrooperation.fact_square)
                                         seed['seedName'] = $filter('translate')(seed.seed.name)
                                     }
+
+
+
+                                    report_detail['squareTotal'] = callScope.getTotal(cluster_list.detail, 'square');
+                                    report_detail['totalTmc'] = callScope.getTotalTmc(cluster_list.detail);
                                 }
                             }
                         }
