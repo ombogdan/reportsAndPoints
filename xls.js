@@ -124,6 +124,13 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 cluster_name: data.data.cluster_name
                             }
                             break;
+                        case "bigBag":
+                            postData.data = this.bigBag(data.data, callScope);
+                            postData.params = {
+                                date_start_exel: $filter('date')(data.data.datefrom * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.dateto * 1000, 'dd.MM.yyyy HH:mm:ss')
+                            }
+                            break;
                         default:
                             postData = {}
                     }
@@ -665,6 +672,52 @@ angular.module('agro.utils.xls', ['ngResource'])
                         violation['violation'] = callScope.trackerViolationType(violation);
                     }
                     return data.violationList;
+                },
+                bigBag: function (data, callScope) {
+                    data.repList.sort(function (a, b) {
+                        if (a.grainPackingVehicle.name < b.grainPackingVehicle.name) {
+                            return -1;
+                        }
+                        if (a.grainPackingVehicle.name > b.grainPackingVehicle.name) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    for (let i = 0; i < data.repList.length; i++) {
+                        let bigBag = data.repList[i];
+                        for (let b = 0; b < bigBag.bigBagDetail.length; b++) {
+                            let bigBagdetail = bigBag.bigBagDetail[b];
+                            bigBagdetail.subDetailList.sort(function (a, b) {
+                                if (a.unloading_tm < b.unloading_tm) {
+                                    return -1;
+                                }
+                                if (a.unloading_tm > b.unloading_tm) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+
+                            for (let s = 0; s < bigBagdetail.subDetailList.length; s++) {
+                                let subDetail = bigBagdetail.subDetailList[s]
+                                subDetail['unloading_tm_exel'] =  $filter('date')(subDetail.unloading_tm * 1000, 'dd.MM.yyyy HH:mm:ss') + "(" + $filter('secondsToDateTime')(subDetail.unloading_duration) + ")";
+                            }
+
+                            if (bigBagdetail.geozone_in_tm) {
+                                bigBagdetail['geozone_in_tm_exel'] = $filter('date')(bigBagdetail.geozone_in_tm * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            } else {
+                                bigBagdetail['geozone_in_tm_exel'] = ''
+                            }
+
+                            for (let g = 0; g < bigBagdetail.geozoneInList.length; g++) {
+                                let inGeozone = bigBagdetail.geozoneInList[g]
+                                bigBagdetail['geozone_in_tm_exel'] =  $filter('date')(inGeozone.tm_in * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            }
+                            bigBagdetail['geozoneInListLength'] = bigBagdetail.geozoneInList.length ? bigBagdetail.geozoneInList.length : 0
+                            bigBagdetail['subDetailListLength'] = bigBagdetail.subDetailList.length
+                        }
+                    }
+                    return data.repList;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
