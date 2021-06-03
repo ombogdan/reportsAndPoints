@@ -59,6 +59,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 cluster_name: data.data.cluster_name
                             }
                             break;
+
                         case "agrooperationWorkType":
                             postData.data = this.agrooperationWorkType(data.data, callScope);
 
@@ -96,7 +97,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "agroworkConsolidated":
                             postData.data = this.agroworkConsolidated(data.data, callScope);
                             postData.params = {
-                                translate:{
+                                translate: {
                                     reportName: $filter('translate')('report.agrowork.consolidated'),
                                     processed_by_period: $filter('translate')('processed.by.period')
                                 },
@@ -104,6 +105,24 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss')
                             }
                             console.log(JSON.stringify(postData))
+                            break;
+                        case "waybillConsolidated":
+                            postData.data = this.waybillConsolidated(data.data, callScope);
+                            postData.params = {
+                                reportType: $filter('translate')('report.waybill.consolidated'),
+                                date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                cluster_name: data.data.cluster_name
+                            }
+                            break;
+                        case "controlTrackerData":
+                            postData.data = this.controlTrackerData(data.data, callScope);
+                            postData.params = {
+                                reportType: $filter('translate')('report.waybill.consolidated'),
+                                date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                cluster_name: data.data.cluster_name
+                            }
                             break;
                         default:
                             postData = {}
@@ -440,12 +459,12 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                                 for (var d = 0; d < cluster_list.detail.length; d++) {
                                     var report_detail = cluster_list.detail[d]
-                                    report_detail['factDateStartExel'] = $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss')!== null ? $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss') : '';
+                                    report_detail['factDateStartExel'] = $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss') !== null ? $filter('date')(report_detail.agrooperation.fact_date_start, 'dd.MM.yyyy HH:mm:ss') : '';
                                     report_detail['factDateEndExel'] = $filter('date')(report_detail.agrooperation.fact_date_end, 'dd.MM.yyyy HH:mm:ss') !== null ? $filter('date')(report_detail.agrooperation.fact_date_end, 'dd.MM.yyyy HH:mm:ss') : '';
                                     report_detail['processed_percent'] = report_detail.agrooperation.fact_square / report_detail.agrooperation.plan_square * 100;
                                     report_detail.agrooperation.fact_square = report_detail.agrooperation.fact_square ? report_detail.agrooperation.fact_square : '';
 
-                                    if(report_detail.agrooperation.materialSeedList.length>0){
+                                    if (report_detail.agrooperation.materialSeedList.length > 0) {
                                         report_detail['seedTranslate'] = [{
                                             plant_protector: $filter('translate')('seed'),
                                             plan: $filter('translate')('plan'),
@@ -456,10 +475,10 @@ angular.module('agro.utils.xls', ['ngResource'])
                                             material_rate: $filter('translate')('material.rate')
                                         }]
 
-                                    }else{
+                                    } else {
                                         report_detail['plantProtectorTranslate'] = []
                                     }
-                                    if(report_detail.agrooperation.materialFertilizerList.length>0){
+                                    if (report_detail.agrooperation.materialFertilizerList.length > 0) {
                                         report_detail['fertilizerTranslate'] = [{
                                             plant_protector: $filter('translate')('fertilizer'),
                                             plan: $filter('translate')('plan'),
@@ -470,10 +489,10 @@ angular.module('agro.utils.xls', ['ngResource'])
                                             material_rate: $filter('translate')('material.rate')
                                         }]
 
-                                    }else{
+                                    } else {
                                         report_detail['plantProtectorTranslate'] = []
                                     }
-                                    if(report_detail.agrooperation.materialPlantProtectorList.length>0){
+                                    if (report_detail.agrooperation.materialPlantProtectorList.length > 0) {
                                         report_detail['plantProtectorTranslate'] = [{
                                             plant_protector: $filter('translate')('plant_protector'),
                                             plan: $filter('translate')('plan'),
@@ -484,29 +503,28 @@ angular.module('agro.utils.xls', ['ngResource'])
                                             material_rate: $filter('translate')('material.rate')
                                         }]
 
-                                    }else{
+                                    } else {
                                         report_detail['plantProtectorTranslate'] = []
                                     }
 
                                     for (var f = 0; f < report_detail.agrooperation.materialFertilizerList.length; f++) {
                                         var fertilizer = report_detail.agrooperation.materialFertilizerList[f];
-                                        fertilizer['fertilizerRatePlan'] = fertilizer.fertilizerRatePlan !== 0 &&  fertilizer.fertilizerRatePlan ? fertilizer.fertilizerRatePlan : '';
+                                        fertilizer['fertilizerRatePlan'] = fertilizer.fertilizerRatePlan !== 0 && fertilizer.fertilizerRatePlan ? fertilizer.fertilizerRatePlan : '';
                                         fertilizer['fertilizerRatePlan_square'] = (report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan !== 0 && report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan) ? report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan : '';
-                                        fertilizer['fertilizerRateFact'] = (fertilizer.fertilizerRateFact !==0 && fertilizer.fertilizerRateFact) ? fertilizer.fertilizerRateFact : ''
-                                        fertilizer['fertilizerRateFact_square'] = (report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact !==0 && report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact) ? report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact : '';
+                                        fertilizer['fertilizerRateFact'] = (fertilizer.fertilizerRateFact !== 0 && fertilizer.fertilizerRateFact) ? fertilizer.fertilizerRateFact : ''
+                                        fertilizer['fertilizerRateFact_square'] = (report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact !== 0 && report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact) ? report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact : '';
 
                                         fertilizer['fertilizerTotalPrice'] = callScope.getFertilizerPrice(fertilizer, report_detail.agrooperation.fact_square);
                                         fertilizer['fertilizerName'] = $filter('translate')(fertilizer.fertilizer.name)
                                     }
 
 
-
                                     for (var p = 0; p < report_detail.agrooperation.materialPlantProtectorList.length; p++) {
                                         var plantProtector = report_detail.agrooperation.materialPlantProtectorList[p];
-                                        plantProtector['plantProtectorRatePlan'] = plantProtector.plantProtectorRatePlan !== 0 &&  plantProtector.plantProtectorRatePlan ? plantProtector.plantProtectorRatePlan : '';
+                                        plantProtector['plantProtectorRatePlan'] = plantProtector.plantProtectorRatePlan !== 0 && plantProtector.plantProtectorRatePlan ? plantProtector.plantProtectorRatePlan : '';
                                         plantProtector['plantProtectorRatePlan_square'] = (report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan !== 0 && report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan) ? report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan : '';
-                                        plantProtector['plantProtectorRateFact'] = (plantProtector.plantProtectorRateFact !==0 && plantProtector.plantProtectorRateFact) ? plantProtector.plantProtectorRateFact : ''
-                                        plantProtector['plantProtectorRateFact_square'] = (report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact !==0 && report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact) ? report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact : '';
+                                        plantProtector['plantProtectorRateFact'] = (plantProtector.plantProtectorRateFact !== 0 && plantProtector.plantProtectorRateFact) ? plantProtector.plantProtectorRateFact : ''
+                                        plantProtector['plantProtectorRateFact_square'] = (report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact !== 0 && report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact) ? report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact : '';
 
                                         plantProtector['plantProtectorTotalPrice'] = callScope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square);
                                         plantProtector['plantProtectorName'] = $filter('translate')(plantProtector.plantProtector.name)
@@ -514,15 +532,14 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                                     for (var s = 0; s < report_detail.agrooperation.materialSeedList.length; s++) {
                                         var seed = report_detail.agrooperation.materialSeedList[s];
-                                        seed['seedRatePlan'] = seed.seedRatePlan !== 0 &&  seed.seedRatePlan ? seed.seedRatePlan : '';
+                                        seed['seedRatePlan'] = seed.seedRatePlan !== 0 && seed.seedRatePlan ? seed.seedRatePlan : '';
                                         seed['seedRatePlan_square'] = (report_detail.agrooperation.plan_square * seed.seedRatePlan !== 0 && report_detail.agrooperation.plan_square * seed.seedRatePlan) ? report_detail.agrooperation.plan_square * seed.seedRatePlan : '';
-                                        seed['seedRateFact'] = (seed.seedRateFact !==0 && seed.seedRateFact) ? seed.seedRateFact : ''
-                                        seed['seedRateFact_square'] = (report_detail.agrooperation.fact_square * seed.seedRateFact !==0 && report_detail.agrooperation.fact_square * seed.seedRateFact) ? report_detail.agrooperation.fact_square * seed.seedRateFact : '';
+                                        seed['seedRateFact'] = (seed.seedRateFact !== 0 && seed.seedRateFact) ? seed.seedRateFact : ''
+                                        seed['seedRateFact_square'] = (report_detail.agrooperation.fact_square * seed.seedRateFact !== 0 && report_detail.agrooperation.fact_square * seed.seedRateFact) ? report_detail.agrooperation.fact_square * seed.seedRateFact : '';
 
                                         seed['seedTotalPrice'] = callScope.getSeedPrice(seed, report_detail.agrooperation.fact_square)
                                         seed['seedName'] = $filter('translate')(seed.seed.name)
                                     }
-
 
 
                                     report_detail['squareTotal'] = callScope.getTotal(cluster_list.detail, 'square');
@@ -533,6 +550,121 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
 
                     return data.repData;
+                },
+                waybillConsolidated: function (data, callScope) {
+                    data.waybillList.sort(function (a, b) {
+
+                        if (sortColumn.waybillConsolidated.reverse === false) {
+                            if (sortColumn.waybillConsolidated.column === 'time_in_geozone' || sortColumn.waybillConsolidated.column == 'time_out') {
+
+                                var aa = eval('a.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+                                var bb = eval('b.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+
+                                if (aa == null) {
+                                    return 1;
+                                } else if (bb == null) {
+                                    return -1;
+                                }
+
+                                if (parseInt(aa) === parseInt(bb)) {
+                                    return 0;
+                                } else if (data.waybillList) {
+                                    return parseInt(aa) < parseInt(bb) ? -1 : 1;
+                                } else {
+                                    return parseInt(aa) < parseInt(bb) ? 1 : -1;
+                                }
+
+
+                            } else {
+                                try {
+                                    var aa = eval('a.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+                                    var bb = eval('b.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+                                    if (aa === bb) {
+                                        return 0;
+                                    } else if (data.waybillList) {
+                                        return aa < bb ? -1 : 1;
+                                    } else {
+                                        return aa < bb ? 1 : -1;
+                                    }
+
+                                } catch (e) {
+                                    if (aa == null) {
+                                        return 1;
+                                    } else if (bb == null) {
+                                        return -1;
+                                    }
+
+                                }
+                            }
+                        } else {
+                            if (sortColumn.waybillConsolidated.column === 'time_in_geozone' || sortColumn.waybillConsolidated.column === 'time_out') {
+                                var aa = eval('a.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+                                var bb = eval('b.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+
+                                if (aa == null) {
+                                    return -1;
+                                } else if (bb == null) {
+                                    return 1;
+                                }
+
+                                if (parseInt(aa) === parseInt(bb)) {
+                                    return 0;
+                                } else if (data.waybillList) {
+                                    return parseInt(aa) < parseInt(bb) ? 1 : -1;
+                                } else {
+                                    return parseInt(aa) < parseInt(bb) ? -1 : 1;
+                                }
+
+                            } else {
+                                try {
+                                    var aa = eval('a.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+                                    var bb = eval('b.' + (sortColumn.waybillConsolidated.column).replace(' | translate', ''))
+
+                                    if (aa === bb) {
+                                        return -1;
+                                    } else if (data.waybillList) {
+                                        return aa < bb ? 1 : -1;
+                                    } else {
+                                        return aa < bb ? -1 : 1;
+                                    }
+                                } catch (e) {
+                                    if (aa == null) {
+                                        return -1;
+                                    } else if (bb == null) {
+                                        return 1;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    for (var i = 0; i < data.waybillList.length; i++) {
+                        var reportDetail = data.waybillList[i];
+                        if (reportDetail.refuelingDetailList.length > 0) {
+                            reportDetail['time_in_geozone_exel'] = $filter('date')(reportDetail.time_in_geozone, 'HH:mm');
+                            reportDetail['time_out_exel'] = $filter('date')(reportDetail.time_out, 'HH:mm');
+                            reportDetail['time_duration_exel'] = $filter('secondsToDateTime2')(reportDetail.time_duration);
+                            if ($filter('number')(reportDetail.geozone ? reportDetail.geozone.square_real : '', 1) === '0,0') {
+                                reportDetail['processed_exel'] = "";
+                            } else {
+                                reportDetail['processed_exel'] = $filter('number')(reportDetail.geozone ? reportDetail.geozone.square_real : '', 1);
+                            }
+                            reportDetail['date_exel'] = $filter('date')(reportDetail.date, 'dd.MM.yyyy');
+                            reportDetail['cultureNameExel'] = $filter('translate')(reportDetail.culture ? reportDetail.culture.name : '');
+                            reportDetail['seedNameExel'] = $filter('translate')(reportDetail.seed ? reportDetail.seed.name : '');
+                            reportDetail['workTypeNameExel'] = $filter('translate')(reportDetail.workType ? reportDetail.workType.name : '');
+                        }
+                    }
+                    return data.repData;
+                },
+                controlTrackerData: function (data, callScope) {
+                    for (var i = 0; i < data.violationList.length; i++) {
+                        var violation = data.violationList[i];
+                        violation['date_start_exel'] = $filter('date')(violation.date_start, 'dd.MM.yyyy HH:mm:ss');
+                        violation['date_end_exel'] = $filter('date')(violation.date_end, 'dd.MM.yyyy HH:mm:ss');
+                        violation['durationExel'] = $filter('secondsToDateTime')((violation.date_end - violation.date_start) / 1000);
+                        violation['violation'] = callScope.trackerViolationType(violation);
+                    }
+                    return data.violationList;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
