@@ -131,6 +131,14 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 date_end_exel: $filter('date')(data.data.dateto * 1000, 'dd.MM.yyyy HH:mm:ss')
                             }
                             break;
+                        case "byFuelConsolidated":
+                            postData.data = this.byFuelConsolidated(data.data, callScope);
+                            postData.params = {
+                                date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss')
+                            }
+                            console.log(JSON.stringify(postData))
+                            break;
                         default:
                             postData = {}
                     }
@@ -700,7 +708,7 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                             for (let s = 0; s < bigBagdetail.subDetailList.length; s++) {
                                 let subDetail = bigBagdetail.subDetailList[s]
-                                subDetail['unloading_tm_exel'] =  $filter('date')(subDetail.unloading_tm * 1000, 'dd.MM.yyyy HH:mm:ss') + "(" + $filter('secondsToDateTime')(subDetail.unloading_duration) + ")";
+                                subDetail['unloading_tm_exel'] = $filter('date')(subDetail.unloading_tm * 1000, 'dd.MM.yyyy HH:mm:ss') + "(" + $filter('secondsToDateTime')(subDetail.unloading_duration) + ")";
                             }
 
                             if (bigBagdetail.geozone_in_tm) {
@@ -711,13 +719,232 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                             for (let g = 0; g < bigBagdetail.geozoneInList.length; g++) {
                                 let inGeozone = bigBagdetail.geozoneInList[g]
-                                bigBagdetail['geozone_in_tm_exel'] =  $filter('date')(inGeozone.tm_in * 1000, 'dd.MM.yyyy HH:mm:ss');
+                                bigBagdetail['geozone_in_tm_exel'] = $filter('date')(inGeozone.tm_in * 1000, 'dd.MM.yyyy HH:mm:ss');
                             }
                             bigBagdetail['geozoneInListLength'] = bigBagdetail.geozoneInList.length ? bigBagdetail.geozoneInList.length : 0
                             bigBagdetail['subDetailListLength'] = bigBagdetail.subDetailList.length
                         }
                     }
                     return data.repList;
+                },
+                byFuelConsolidated: function (data, callScope) {
+                    data.data.sort(function (a, b) {
+                        if (a.vehicle_name < b.vehicle_name) {
+                            return -1;
+                        }
+                        if (a.vehicle_name < b.vehicle_name) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (var i = 0; i < data.data.length; i++) {
+                        var record = data.data[i];
+                        record.detailList.forEach(function (item) {
+                            item['date_exel'] = $filter('date')(item.date, 'dd.MM.yyyy');
+                            item['time_start_exel'] = item.time_start > 0 ? $filter('date')(item.time_start * 1000, 'dd.MM.yyyy HH:mm:ss') : '';
+                            item['time_end_exel'] = item.time_end > 0 ? $filter('date')(item.time_end * 1000, 'dd.MM.yyyy HH:mm:ss') : '';
+                            item['time_going_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.time_going);
+                            item['time_stopping_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.time_stopping);
+                            item['working_night_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.working_night_time);
+                            item['ignition_night_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_night_time);
+                        })
+                        record['time_start_exel'] = record.time_start > 0 ? $filter('date')(record.time_start * 1000, 'dd.MM.yyyy HH:mm:ss') : '';
+                        record['time_end_exel'] = record.time_end > 0 ? $filter('date')(record.time_end * 1000, 'dd.MM.yyyy HH:mm:ss') : '';
+                        record['time_going_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.time_going);
+                        record['time_stopping_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.time_stopping)
+                        record['working_night_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.working_night_time)
+                        record['ignition_night_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.ignition_night_time)
+                        //---
+                        record['fuelGraphData'] = []
+                        //table2 drt
+                        if (record.sensorList.drt) {
+                            record.detailList.forEach(function (item) {
+                                item['ignition_moving_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_moving_time);
+                                item['ignition_stopping_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_stopping_time);
+                                item['ignition_working_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_working_time);
+                            });
+
+                            //total
+                            record['ignition_stopping_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.ignition_stopping_time);
+                            record['ignition_working_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.ignition_working_time);
+                            // ---
+                        }
+                        if (record.sensorList.drt) {
+                            record['drtTotal'] = [{
+                                total: $filter('translate')('total'),
+                                fuel_used_drt_moving: record.fuel_used_drt_moving,
+                                fuel_used_drt_moving_avg: record.fuel_used_drt_moving_avg,
+                                ignition_moving_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_moving_time),
+                                fuel_used_drt_stopping: record.fuel_used_drt_stopping,
+                                fuel_used_drt_stopping_avg: record.fuel_used_drt_stopping_avg,
+                                ignition_stopping_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_stopping_time),
+                                distance: record.distance,
+                                ignition_working_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_working_time),
+                                fuel_used_drt_avg: record.fuel_used_drt_avg,
+                                fuel_used_drt: record.fuel_used_drt,
+                            }]
+                        } else {
+                            record['drtTotal'] = []
+                        }
+
+                        // ---
+
+                        //table2 dut
+                        var dut_content = '';
+                        if (record.sensorList.dut) {
+                            record.detailList.forEach(function (item) {
+
+                                item['ignition_moving_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_moving_time);
+                                item['ignition_stopping_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_stopping_time);
+                                item['ignition_working_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(item.ignition_working_time);
+                            });
+
+                            //total
+                            record['ignition_moving_time_exel'] = $filter('secondsToDateTimeWithDaysFull')(record.ignition_moving_time);
+                            // ---
+                        }
+                        if (record.sensorList.dut) {
+                            record['dutTotal'] = [{
+                                total: $filter('translate')('total'),
+                                fuel_level_start: record.fuel_level_start,
+                                fuel_level_end: record.fuel_level_end,
+                                fuel_used_dut_moving: record.fuel_used_dut_moving,
+                                fuel_used_dut_moving_avg: record.fuel_used_dut_moving_avg,
+                                ignition_moving_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_moving_time),
+                                fuel_used_dut_stopping: record.fuel_used_dut_stopping,
+                                fuel_used_dut_stopping_avg: record.fuel_used_dut_stopping_avg,
+                                ignition_stopping_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_stopping_time),
+                                distance: record.distance,
+                                ignition_working_time_exel: $filter('secondsToDateTimeWithDaysFull')(record.ignition_working_time),
+                                fuel_used_dut_avg: record.fuel_used_dut_avg,
+                                fuel_used_dut: record.fuel_used_dut,
+                            }]
+                        } else {
+                            record['drtTotal'] = []
+                        }
+                        // ---
+
+                        //table3
+
+                        record.refuelingAndDrainList.forEach(function (item) {
+                            item['date_exel'] = item.start_tm > 0 ? $filter('date')(item.start_tm * 1000, 'dd.MM.yyyy HH:mm:ss') : '';
+                            item['litrExel'] = item.isRefueling ? $filter('number')(item.litr, 1) : '';
+                            item['litrExel2'] = item.refuelingByAzs ? $filter('number')(item.refuelingByAzs, 1) : '';
+                        });
+
+                        //table4 wayblill
+                        record.waybillTotal = {
+                            '1': $filter('translate')('total'),
+                            '3': 0,
+                            '4': 0,
+                            '5': 0,
+                            '6': 0,
+                            '7': 0,
+                            '12': 0,
+                            '13': 0,
+                            '14': 0,
+                            '15': 0,
+                            '16': 0,
+                            '17': 0
+                        };
+                        record.waybillList.forEach(function (item) {
+                            item['time_in_exel'] = $filter('date')(item.time_in, 'dd.MM.yyyy HH:mm:ss')
+                            item['time_out'] = $filter('date')(item.time_out, 'dd.MM.yyyy HH:mm:ss')
+                            item['workingTimeExel'] = $filter('translate')($filter('secondsToDateTime')(item.time_duration + item.time_duration_moving));
+                            item['time_duration_exel'] = $filter('translate')($filter('secondsToDateTime')(item.time_duration - item.stop_with_engine_processed));
+                            item['stop_with_engine_processed_exel'] = $filter('translate')($filter('secondsToDateTime')(item.stop_with_engine_processed + item.stop_with_engine_moving));
+                            item['time_duration_moving_exel'] = $filter('translate')($filter('secondsToDateTime')(item.time_duration_moving - item.stop_with_engine_moving));
+                            item['night_working_exel'] = $filter('translate')($filter('secondsToDateTime')(item.night_working));
+                            item['worktypesExel'] = !item.is_working ? $filter('translate')('crossing.name') : item.trailer && item.trailer.worktype ? $filter('translate')(item.trailer.worktype.name) : '';
+
+                            record.waybillTotal['3'] += item.time_duration + item.time_duration_moving;
+                            record.waybillTotal['4'] += item.time_duration - item.stop_with_engine_processed;
+                            record.waybillTotal['5'] += item.stop_with_engine_processed + item.stop_with_engine_moving;
+                            record.waybillTotal['6'] += item.time_duration_moving - item.stop_with_engine_moving;
+                            record.waybillTotal['7'] += item.night_working;
+
+                            record.waybillTotal['12'] += item.processed;
+                            record.waybillTotal['13'] += item.distance_moving;
+                            record.waybillTotal['14'] += item.fuel_used;
+                            record.waybillTotal['15'] += item.fuel_used_processed;
+                            record.waybillTotal['16'] += item.fuel_used_moving;
+                            record.waybillTotal['17'] += item.processed_count;
+                        });
+                        //total
+                        if (record.waybillList.length > 0) {
+                            record['waybillTranslate'] = [{
+                                timein: $filter('translate')('timein'),
+                                report_waybill: $filter('translate')('report.waybill'),
+                                timeout: $filter('translate')('timeout'),
+                                workingtime: $filter('translate')('workingtime'),
+                                including: $filter('translate')('including'),
+                                rep_working: $filter('translate')('rep.working'),
+                                rep_stopping: $filter('translate')('rep.stopping'),
+                                rep_moving: $filter('translate')('rep.moving'),
+                                night_work: $filter('translate')('night.work'),
+                                mechanic: $filter('translate')('mechanic'),
+                                field: $filter('translate')('field'),
+                                worktypes: $filter('translate')('worktypes'),
+                                trailer: $filter('translate')('trailer'),
+                                processed: $filter('translate')('processed'),
+                                crossing: $filter('translate')('crossing'),
+                                fuel: $filter('translate')('fuel'),
+                                fuel_used_processed: $filter('translate')('fuel.used.processed'),
+                                fuel_used_moving1: $filter('translate')('fuel.used.moving1'),
+                                processed_counted: $filter('translate')('processed.counted')
+                            }]
+                        } else {
+                            record['waybillTranslate'] = []
+                        }
+
+
+                        if (record.sensorList.drt > 0) {
+                            record['drtTranslate'] = [{
+                                sensor_fuel_drt: $filter('translate')('sensor.fuel.drt'),
+                                date: $filter('translate')('date'),
+                                fuel_level: $filter('translate')('fuel.level'),
+                                going: $filter('translate')('going'),
+                                stopping_working: $filter('translate')('stopping.working'),
+                                distance: $filter('translate')('distance'),
+                                rep_stopping: $filter('translate')('rep.stopping'),
+                                ignition_working_time: $filter('translate')('ignition_working_time'),
+                                fuel_100km: $filter('translate')('fuel.100km'),
+                                fuel_used: $filter('translate')('fuel.used'),
+                                start_litr: $filter('translate')('start_litr'),
+                                end_litr: $filter('translate')('end_litr'),
+                                fuel_1hour: $filter('translate')('fuel.1hour'),
+
+                                crossing: $filter('translate')('crossing'),
+                                fuel: $filter('translate')('fuel'),
+                                fuel_used_processed: $filter('translate')('fuel.used.processed'),
+                                fuel_used_moving1: $filter('translate')('fuel.used.moving1'),
+                                processed_counted: $filter('translate')('processed.counted'),
+                            }]
+                        } else {
+                            record['wdrtTranslate'] = []
+                        }
+                        let drtList = [];
+                        if (record.sensorList.drt) {
+                            record.detailList.forEach(function (item) {
+                                drtList.push({
+                                    date_exel: $filter('date')(item.date, 'dd.MM.yyyy'),
+                                    fuel_used_drt_moving: item.fuel_used_drt_moving,
+                                    fuel_used_drt_moving_avg: item.fuel_used_drt_moving_avg,
+                                    ignition_moving_time_exel: $filter('secondsToDateTimeWithDaysFull')(item.ignition_moving_time),
+                                    fuel_used_drt_stopping: item.fuel_used_drt_stopping,
+                                    fuel_used_drt_stopping_avg: item.fuel_used_drt_stopping_avg,
+                                    ignition_stopping_time_exel: $filter('secondsToDateTimeWithDaysFull')(item.ignition_stopping_time),
+                                    distance: item.distance,
+                                    ignition_working_time_exel: $filter('secondsToDateTimeWithDaysFull')(item.ignition_working_time),
+                                    fuel_used_drt_avg: item.fuel_used_drt_avg,
+                                    fuel_used_drt: item.fuel_used_drt,
+
+                                })
+                            });
+                        }
+                        record['drtList'] = drtList;
+                    }
+                    return data.data;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;

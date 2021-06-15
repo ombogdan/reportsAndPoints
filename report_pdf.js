@@ -2906,7 +2906,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     var list = report_header.clusterList;
                     list.sort(function (a, b) {
 
-                        if ($filter('translate')(a.main ? a.main.name : '') < $filter('translate')(b.main? b.main.name : '')) {
+                        if ($filter('translate')(a.main ? a.main.name : '') < $filter('translate')(b.main ? b.main.name : '')) {
                             return -1;
                         }
                         if ($filter('translate')(a.main ? a.main.name : '') > $filter('translate')(b.main ? b.main.name : '')) {
@@ -3348,7 +3348,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     } else {
                         table_body.push([
                             {
-                                'text': $filter('translate')((cluster_list.main? cluster_list.main.name : '')),
+                                'text': $filter('translate')((cluster_list.main ? cluster_list.main.name : '')),
                                 bold: 'true',
                                 style: 'header',
                                 colSpan: 3,
@@ -3679,10 +3679,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 border: [false, false, false, false],
                                 bold: 'true',
                                 style: 'header',
-                                colSpan: 8,
+                                colSpan: 7,
                                 alignment: 'left'
                             },
-                            {},
                             {},
                             {},
                             {},
@@ -3693,12 +3692,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         tmc_fertilizer_table.push([
                             {
                                 'text': $filter('translate')('fertilizer'),
-                                style: 'header',
-                                rowSpan: 2,
-                                alignment: 'center'
-                            },
-                            {
-                                'text': $filter('translate')('store'),
                                 style: 'header',
                                 rowSpan: 2,
                                 alignment: 'center'
@@ -3733,7 +3726,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                         tmc_fertilizer_table.push([
                             {'text': ""},
-                            {'text': ""},
                             {'text': $filter('translate')('material.rate'), style: 'header', alignment: 'center'},
                             {'text': $filter('translate')('material.total'), style: 'header', alignment: 'center'},
                             {'text': $filter('translate')('material.rate'), style: 'header', alignment: 'center'},
@@ -3747,12 +3739,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         tmc_seed_table.push([
                             {
                                 'text': $filter('translate')('seed'),
-                                style: 'header',
-                                rowSpan: 2,
-                                alignment: 'center'
-                            },
-                            {
-                                'text': $filter('translate')('store'),
                                 style: 'header',
                                 rowSpan: 2,
                                 alignment: 'center'
@@ -3786,7 +3772,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         ])
 
                         tmc_seed_table.push([
-                            {'text': ""},
                             {'text': ""},
                             {
                                 'text': $filter('translate')('material.seed.rate'),
@@ -3813,12 +3798,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 alignment: 'center'
                             },
                             {
-                                'text': $filter('translate')('store'),
-                                style: 'header',
-                                rowSpan: 2,
-                                alignment: 'center'
-                            },
-                            {
                                 'text': $filter('translate')('plan'),
                                 style: 'header',
                                 alignment: 'center',
@@ -3848,7 +3827,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                         tmc_plantProtector_table.push([
                             {'text': ""},
-                            {'text': ""},
                             {'text': $filter('translate')('material.rate'), style: 'header', alignment: 'center'},
                             {'text': $filter('translate')('material.total'), style: 'header', alignment: 'center'},
                             {'text': $filter('translate')('material.rate'), style: 'header', alignment: 'center'},
@@ -3859,60 +3837,45 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         //------------
 
                         //Добрива
-                        for (var f = 0; f < report_detail.agrooperation.materialFertilizerList.length; f++) {
-                            var fertilizer = report_detail.agrooperation.materialFertilizerList[f];
-                            if (fertilizer.fertilizerRatePlan == 0 && fertilizer.fertilizerRateFact == 0) {
-                                var fertilizerRatePlan = {'text': '', style: 'td'}
-                                var fertilizerRatePlan_square = {'text': '', style: 'td'}
-                                var fertilizerRateFact = {'text': ''}
-                                var fertilizerRateFact_square = {'text': '', style: 'td'}
+                        for (var f = 0; f < report_detail.agrooperation.materialFertilizerTotalList.length; f++) {
+                            var fertilizer = report_detail.agrooperation.materialFertilizerTotalList[f];
 
-                            } else if (fertilizer.fertilizerRatePlan == 0) {
-                                var fertilizerRatePlan = {'text': '', style: 'td'}
-                                var fertilizerRatePlan_square = {'text': '', style: 'td'}
-                                var fertilizerRateFact = {
-                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 3),
-                                    style: 'td',
-                                    alignment: 'center',
-                                }
-                                var fertilizerRateFact_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact, 3),
-                                    style: 'td'
-                                }
-                            } else if (fertilizer.fertilizerRateFact == 0) {
-                                var fertilizerRatePlan = {
-                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 3),
-                                    style: 'td'
-                                }
-                                var fertilizerRatePlan_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 3),
-                                    style: 'td'
-                                }
-                                var fertilizerRateFact = {'text': ''}
-                                var fertilizerRateFact_square = {'text': '', style: 'td'}
+                            var fertilizerRatePlan = {'text': '', style: 'td'}
+                            var fertilizerRatePlan_square = {'text': '', style: 'td'}
+                            var fertilizerRateFact = {'text': ''}
+                            var fertilizerRateFact_square = {'text': '', style: 'td'}
 
-                            } else {
-                                var fertilizerRatePlan = {
-                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 3),
+                            if (fertilizer.fertilizerRatePlan !== 0) {
+                                fertilizerRatePlan = {
+                                    'text': $filter('number')(fertilizer.fertilizerRatePlan, 3) +" "+params.scope.getFertilizerUnit(fertilizer.fertilizerUnit).name,
                                     style: 'td'
-                                }
-                                var fertilizerRatePlan_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.plan_square * fertilizer.fertilizerRatePlan, 3),
-                                    style: 'td'
-                                }
-                                var fertilizerRateFact = {
-                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 3),
-                                    style: 'td',
-                                    alignment: 'center',
-                                }
-                                var fertilizerRateFact_square = {
-                                    'text': $filter('number')(report_detail.agrooperation.fact_square * fertilizer.fertilizerRateFact, 2),
-                                    style: 'td',
                                 }
                             }
+
+                            if (fertilizer.fertilizerRatePlanTotal !== 0) {
+                                fertilizerRatePlan_square = {
+                                    'text': $filter('number')(fertilizer.fertilizerRatePlanTotal, 3) +" "+params.scope.getFertilizerUnit(fertilizer.fertilizerUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+
+                            if (fertilizer.fertilizerRateFact !== 0) {
+                                fertilizerRateFact = {
+                                    'text': $filter('number')(fertilizer.fertilizerRateFact, 3) +" "+params.scope.getFertilizerUnit(fertilizer.fertilizerUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+                            if (fertilizer.fertilizerRateFactTotal !== 0) {
+                                fertilizerRateFact_square = {
+                                    'text': $filter('number')(fertilizer.fertilizerRateFactTotal, 3) +" "+params.scope.getFertilizerUnit(fertilizer.fertilizerUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
                             tmc_fertilizer_table.push([
                                 {'text': $filter('translate')(fertilizer.fertilizer.name), style: 'td'},
-                                {'text': fertilizer.store.name, style: 'td'},
                                 fertilizerRatePlan,
                                 fertilizerRatePlan_square,
                                 fertilizerRateFact,
@@ -3931,202 +3894,115 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                         //Насіння
 
-                        for (var f = 0; f < report_detail.agrooperation.materialSeedList.length; f++) {
-                            var seed = report_detail.agrooperation.materialSeedList[f]
-                            if (seed.seedRatePlan == 0 && seed.seedRateFact == 0) {
-                                tmc_seed_table.push([
-                                    {'text': seed.seed.name, style: 'td'},
-                                    {'text': seed.store.name, style: 'td'},
-                                    {},
-                                    {},
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(seed.seedUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getSeedPrice(seed, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else if (seed.seedRatePlan == 0) {
-                                tmc_seed_table.push([
-                                    {'text': seed.seed.name, style: 'td'},
-                                    {'text': seed.store.name, style: 'td'},
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(seed.seedRateFact, 3),
-                                        style: 'td',
-                                        alignment: 'center',
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 3),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(seed.seedUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getSeedPrice(seed, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else if (seed.seedRateFact == 0) {
-                                tmc_seed_table.push([
-                                    {'text': seed.seed.name, style: 'td'},
-                                    {'text': seed.store.name, style: 'td'},
-                                    {'text': $filter('number')(seed.seedRatePlan, 3), style: 'td'},
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 3),
-                                        style: 'td',
-                                    },
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(seed.seedUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getSeedPrice(seed, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else {
-                                tmc_seed_table.push([
-                                    {'text': seed.seed.name, style: 'td'},
-                                    {'text': seed.store.name, style: 'td'},
-                                    {'text': $filter('number')(seed.seedRatePlan, 3), style: 'td'},
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * seed.seedRatePlan, 3),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(seed.seedRateFact, 3),
-                                        style: 'td',
-                                        alignment: 'center',
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * seed.seedRateFact, 3),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(seed.seedUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getSeedPrice(seed, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
+                        for (let f = 0; f < report_detail.agrooperation.materialSeedTotalList.length; f++) {
+                            var seed = report_detail.agrooperation.materialSeedTotalList[f]
+
+                            var seedRatePlan = {'text': '', style: 'td'}
+                            var seedRatePlan_square = {'text': '', style: 'td'}
+                            var seedRateFact = {'text': ''}
+                            var seedRateFact_square = {'text': '', style: 'td'}
+                            if (seed.seedRatePlan !== 0) {
+                                seedRatePlan = {
+                                    'text': $filter('number')(seed.seedRatePlan, 3)+" "+params.scope.getSeedUnit(seed.seedUnit).name,
+                                    style: 'td'
+                                }
                             }
+
+                            if (seed.seedRatePlanTotal !== 0) {
+                                seedRatePlan_square = {
+                                    'text': $filter('number')(seed.seedRatePlanTotal, 3)+" "+params.scope.getSeedUnit(seed.seedUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+
+                            if (seed.seedRateFact !== 0) {
+                                seedRateFact = {
+                                    'text': $filter('number')(seed.seedRateFact, 3)+" "+params.scope.getSeedUnit(seed.seedUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+                            if (seed.seedRateFactTotal !== 0) {
+                                seedRateFact_square = {
+                                    'text': $filter('number')(seed.seedRateFactTotal, 3)+" "+params.scope.getSeedUnit(seed.seedUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+                            tmc_seed_table.push([
+                                {'text': $filter('translate')(seed.seed.name), style: 'td'},
+                                seedRatePlan,
+                                seedRatePlan_square,
+                                seedRateFact,
+                                seedRateFact_square,
+                                {
+                                    'text': $filter('number')(seed.seedUnitPrice, 2),
+                                    style: 'td',
+                                },
+                                {
+                                    'text': $filter('number')(params.scope.getSeedPrice(seed, report_detail.agrooperation.fact_square), 2),
+                                    style: 'td',
+                                }
+                            ])
                         }
                         //СЗР
-                        for (var f = 0; f < report_detail.agrooperation.materialPlantProtectorList.length; f++) {
-                            var plantProtector = report_detail.agrooperation.materialPlantProtectorList[f]
-                            if (plantProtector.plantProtectorRatePlan == 0 && plantProtector.plantProtectorRateFact == 0) {
-                                tmc_plantProtector_table.push([
-                                    {'text': plantProtector.plantProtector.name, style: 'td'},
-                                    {'text': plantProtector.store.name, style: 'td'},
-                                    {},
-                                    {},
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else if (plantProtector.plantProtectorRatePlan == 0) {
-                                tmc_plantProtector_table.push([
-                                    {'text': plantProtector.plantProtector.name, style: 'td'},
-                                    {'text': plantProtector.store.name, style: 'td'},
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 3),
-                                        style: 'td',
-                                        alignment: 'center',
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact, 3),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else if (plantProtector.plantProtectorRateFact == 0) {
-                                tmc_plantProtector_table.push([
-                                    {'text': plantProtector.plantProtector.name, style: 'td'},
-                                    {'text': plantProtector.store.name, style: 'td'},
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 3),
-                                        style: 'td'
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 3),
-                                        style: 'td',
-                                    },
-                                    {},
-                                    {},
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
-                            } else {
-                                tmc_plantProtector_table.push([
-                                    {'text': plantProtector.plantProtector.name, style: 'td'},
-                                    {'text': plantProtector.store.name, style: 'td'},
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorRatePlan, 3),
-                                        style: 'td'
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.plan_square * plantProtector.plantProtectorRatePlan, 3),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorRateFact, 3),
-                                        style: 'td',
-                                        alignment: 'center',
-                                    },
-                                    {
-                                        'text': $filter('number')(report_detail.agrooperation.fact_square * plantProtector.plantProtectorRateFact, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(plantProtector.plantProtectorUnitPrice, 2),
-                                        style: 'td',
-                                    },
-                                    {
-                                        'text': $filter('number')(params.scope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square), 2),
-                                        style: 'td',
-                                    }
-                                ])
+                        for (var f = 0; f < report_detail.agrooperation.materialPlantProtectorTotalList.length; f++) {
+                            var plantProtector = report_detail.agrooperation.materialPlantProtectorTotalList[f]
+
+                            var plantProtectorRatePlan = {'text': '', style: 'td'}
+                            var plantProtectorRatePlan_square = {'text': '', style: 'td'}
+                            var plantProtectorRateFact = {'text': ''}
+                            var plantProtectorRateFact_square = {'text': '', style: 'td'}
+                            if (seed.plantProtectorRatePlan !== 0) {
+                                plantProtectorRatePlan = {
+                                    'text': $filter('number')(plantProtector.plantProtectorRatePlan, 3) +" "+params.scope.getPlantProtectorUnit(plantProtector.plantProtectorUnit).name,
+                                    style: 'td'
+                                }
                             }
+
+                            if (plantProtector.plantProtectorRatePlanTotal !== 0) {
+                                plantProtectorRatePlan_square = {
+                                    'text': $filter('number')(plantProtector.plantProtectorRatePlanTotal, 3) +" "+params.scope.getPlantProtectorUnit(plantProtector.plantProtectorUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+
+                            if (plantProtector.plantProtectorRateFact !== 0) {
+                                plantProtectorRateFact = {
+                                    'text': $filter('number')(plantProtector.plantProtectorRateFact, 3) +" "+params.scope.getPlantProtectorUnit(plantProtector.plantProtectorUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+                            if (plantProtector.plantProtectorRateFactTotal !== 0) {
+                                plantProtectorRateFact_square = {
+                                    'text': $filter('number')(plantProtector.plantProtectorRateFactTotal, 3) +" "+params.scope.getPlantProtectorUnit(plantProtector.plantProtectorUnit).name,
+                                    style: 'td'
+                                }
+                            }
+
+                            tmc_plantProtector_table.push([
+                                {'text': $filter('translate')(plantProtector.plantProtector.name), style: 'td'},
+                                plantProtectorRatePlan,
+                                plantProtectorRatePlan_square,
+                                plantProtectorRateFact,
+                                plantProtectorRateFact_square,
+                                {
+                                    'text': $filter('number')(plantProtector.plantProtectorUnitPrice, 2),
+                                    style: 'td',
+                                },
+                                {
+                                    'text': $filter('number')(params.scope.getPlantProtectorPrice(plantProtector, report_detail.agrooperation.fact_square), 2),
+                                    style: 'td',
+                                }
+                            ])
                         }
 
 
                         tmc_fertilizer_table.push([
-                            {'text': "", colSpan: 8, border: [false, false, false, false]},
-                            {},
+                            {'text': "", colSpan: 7, border: [false, false, false, false]},
                             {},
                             {},
                             {},
@@ -4135,8 +4011,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {'text': "", border: [false, false, false, false]}])
 
                         tmc_seed_table.push([
-                            {'text': "", colSpan: 8, border: [false, false, false, false]},
-                            {},
+                            {'text': "", colSpan: 7, border: [false, false, false, false]},
                             {},
                             {},
                             {},
@@ -4145,8 +4020,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {'text': "", border: [false, false, false, false]}])
 
                         tmc_plantProtector_table.push([
-                            {'text': "", colSpan: 8, border: [false, false, false, false]},
-                            {},
+                            {'text': "", colSpan: 7, border: [false, false, false, false]},
                             {},
                             {},
                             {},
@@ -4241,7 +4115,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                                 },
                                 {
                                     table: {
-                                        widths: [60, 40, 40, 50, 40, 50, 37, 45],
+                                        widths: [80, 50, 50, 50, 50, 45, 45],
                                         body:
                                             tmc_header.concat(tmc_seed_table).concat(tmc_fertilizer_table).concat(tmc_plantProtector_table)
                                     },
@@ -5031,9 +4905,15 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {'text': refueling.petrolAzs_name, style: 'td'},
                             {'text': $filter('number')(refueling.litr, 1), style: 'td'}])
                     }
+                    let time_in = {'text': "", style: 'td'}
+                    if (reportDetail.time_in_geozone) {
+                        time_in = {'text': $filter('date')(reportDetail.time_in_geozone, 'HH:mm'), style: 'td'}
+                    } else {
+                        time_in = {'text': $filter('date')(reportDetail.time_in, 'HH:mm'), style: 'td'}
+                    }
 
                     table1_body.push([
-                        {'text': $filter('date')(reportDetail.time_in_geozone, 'HH:mm'), style: 'td'},
+                        time_in,
                         {'text': $filter('date')(reportDetail.time_out, 'HH:mm'), style: 'td'},
                         {'text': $filter('secondsToDateTime2')(reportDetail.time_duration), style: 'td'},
                         {'text': $filter('number')(reportDetail.distance_moving, 1), style: 'td'},
@@ -5054,8 +4934,15 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         }]);
                 } else {
                     table_refueling = [];
+                    let time_in = {'text': "", style: 'td'}
+                    if (reportDetail.time_in_geozone) {
+                        time_in = {'text': $filter('date')(reportDetail.time_in_geozone, 'HH:mm'), style: 'td'}
+                    } else {
+                        time_in = {'text': $filter('date')(reportDetail.time_in, 'HH:mm'), style: 'td'}
+                    }
+
                     table1_body.push([
-                        {'text': $filter('date')(reportDetail.time_in_geozone, 'HH:mm'), style: 'td'},
+                        time_in,
                         {'text': $filter('date')(reportDetail.time_out, 'HH:mm'), style: 'td'},
                         {'text': $filter('secondsToDateTime2')(reportDetail.time_duration), style: 'td'},
                         {'text': $filter('number')(reportDetail.distance_moving, 1), style: 'td'},
@@ -14154,9 +14041,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             let width = rep.tenantChart.width;
             let height = rep.tenantChart.height;
-            if(rep.tenantChart.height>800){
+            if (rep.tenantChart.height > 800) {
                 height = 800
-                width = (height /rep.tenantChart.height)* rep.tenantChart.width
+                width = (height / rep.tenantChart.height) * rep.tenantChart.width
             }
 
 

@@ -20,7 +20,7 @@ client.connect({ port: port, host: host }, function() {
     console.log('TCP connection established with the server.');
     // 1355026070838020  cygnet 1txt
     // 13226009700069  piven  txt
-    var data = '1355026070838020'+';NA;';
+    var data = '351513057455880'+';NA;';
     var crc = calc_crc16(data);
 
     var msg = '#L#'+data+crc.toString(16)+'\r\n';
