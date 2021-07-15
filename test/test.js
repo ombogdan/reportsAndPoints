@@ -1,7 +1,9 @@
 // Include Nodejs' net module.
 const Net = require('net');
 var fs = require('fs');
-
+//
+// Буровка №10.1 через елеватор 1 до елеватора 2 point_test
+// Буровка №1 (т) через елеватор 1 до елеватора 2 point_test1
 // The port number and hostname of the server.
 const port = 6005;
 const host = 'demo.agrocontrol.net';
@@ -46,7 +48,7 @@ client.on('data', function(chunk) {
         client.end();
     }
 
-    setTimeout(sendMessage, 3000);
+    setTimeout(sendMessage, 2000);
 
     // Request an end to the connection after the data has been received.
     //client.end();

@@ -14196,10 +14196,10 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             var table1_body = [];
             var content_detail = [];
             rep.repData.sort(function (a, b) {
-                if (a.geozoneGroup.name.localeCompare(b.geozoneGroup.name) < b.geozoneGroup.name.localeCompare(a.geozoneGroup.name)) {
+                if ((a.geozoneGroup ? a.geozoneGroup.name : '').localeCompare((b.geozoneGroup ? b.geozoneGroup.name : '')) < (b.geozoneGroup ? b.geozoneGroup.name : '').localeCompare((a.geozoneGroup ? a.geozoneGroup.name : ''))) {
                     return -1;
                 }
-                if (a.geozoneGroup.name.localeCompare(b.geozoneGroup.name) > b.geozoneGroup.name.localeCompare(a.geozoneGroup.name)) {
+                if ((a.geozoneGroup ? a.geozoneGroup.name : '').localeCompare((b.geozoneGroup ? b.geozoneGroup.name : '')) > (b.geozoneGroup ? b.geozoneGroup.name : '').localeCompare((a.geozoneGroup ? a.geozoneGroup.name : ''))) {
                     return 1;
                 }
                 return 0;
@@ -14210,7 +14210,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 var data = rep.repData[i];
 
                 table1_body.push([
-                    {'text': data.geozoneGroup.name, colSpan: 9},
+                    {'text': data.geozoneGroup? data.geozoneGroup.name : '', colSpan: 9},
                     {},
                     {},
                     {},

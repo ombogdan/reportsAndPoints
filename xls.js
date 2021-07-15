@@ -140,13 +140,20 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "vehicleTask":
                             postData.data = this.vehicleTask(data.data, callScope);
                             postData.params = {
-                                oper_day_exel: $filter('date')(data.data.oper_day * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                oper_day_exel: $filter('date')(data.data.oper_day, 'dd.MM.yyyy HH:mm:ss'),
                                 cluster_name: data.data.cluster_name
+                            }
+                            break;
+                        case "timesheetReport":
+                            postData.data = this.timesheetReport(data.data, callScope);
+                            postData.params = {
+                                reportDate: data.params.month.name + " " + data.params.year,
                             }
                             break;
                         default:
                             postData = {}
                     }
+                    //  console.log(JSON.stringify(postData))
                     this.sendRequest(postData);
 
                 },
@@ -974,12 +981,13 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
                     return data.data;
                 },
-                vehicleTask: function (rep, callScope) {
+                vehicleTask: function (serverData, callScope) {
+                    var rep = $.extend(true, {}, serverData);
                     rep.repData.sort(function (a, b) {
-                        if (a.geozoneGroup.name.localeCompare(b.geozoneGroup.name) < b.geozoneGroup.name.localeCompare(a.geozoneGroup.name)) {
+                        if ((a.geozoneGroup ? a.geozoneGroup.name : '').localeCompare((b.geozoneGroup ? b.geozoneGroup.name : '')) < (b.geozoneGroup ? b.geozoneGroup.name : '').localeCompare((a.geozoneGroup ? a.geozoneGroup.name : ''))) {
                             return -1;
                         }
-                        if (a.geozoneGroup.name.localeCompare(b.geozoneGroup.name) > b.geozoneGroup.name.localeCompare(a.geozoneGroup.name)) {
+                        if ((a.geozoneGroup ? a.geozoneGroup.name : '').localeCompare((b.geozoneGroup ? b.geozoneGroup.name : '')) > (b.geozoneGroup ? b.geozoneGroup.name : '').localeCompare((a.geozoneGroup ? a.geozoneGroup.name : ''))) {
                             return 1;
                         }
                         return 0;
@@ -987,44 +995,6 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                     for (var i = 0; i < rep.repData.length; i++) {
                         var data = rep.repData[i];
-                        data.reportVehicleTaskList.sort(function (a, b) {
-                            if ($filter('translate')(a.workType.name).localeCompare($filter('translate')(b.workType.name)) < $filter('translate')(b.workType.name).localeCompare($filter('translate')(a.workType.name))) {
-                                return -1;
-                            }
-                            if ($filter('translate')(a.workType.name).localeCompare($filter('translate')(b.workType.name)) > $filter('translate')(b.workType.name).localeCompare($filter('translate')(a.workType.name))) {
-                                return 1;
-                            }
-                            return 0;
-                        });
-
-                        for (var k = 0; k < data.reportVehicleTaskList.length; k++) {
-                            let item = data.reportVehicleTaskList[k];
-                            if (item.plan || item.fact) {
-                                item['workTypeName'] = $filter('translate')(item.workType.name)
-                            } else {
-                                item = {}
-                            }
-                            item.detailGeozoneList.sort(function (a, b) {
-                                if (a.geozone.name.localeCompare(b.geozone.name) < b.geozone.name.localeCompare(a.geozone.name)) {
-                                    return -1;
-                                }
-                                if (a.geozone.name.localeCompare(b.geozone.name) > b.geozone.name.localeCompare(a.geozone.name)) {
-                                    return 1;
-                                }
-                                return 0;
-                            });
-
-                            if (item.plan || item.fact) {
-                                for (var d = 0; d < item.detailGeozoneList.length; d++) {
-                                    let detailGeozone = item.detailGeozoneList[d];
-                                    detailGeozone['cultureName'] = $filter('translate')(detailGeozone.culture.name);
-                                    detailGeozone['timeInExel'] = $filter('date')(detailGeozone.time_in, 'dd.MM.yyyy HH:mm');
-                                    detailGeozone['timeOutExel'] = $filter('date')(detailGeozone.time_out, 'dd.MM.yyyy HH:mm');
-                                }
-                            } else {
-                                item = {}
-                            }
-                        }
 
                         data.reportVehicleTaskList.sort(function (a, b) {
                             if ($filter('translate')(a.workType.name).localeCompare($filter('translate')(b.workType.name)) < $filter('translate')(b.workType.name).localeCompare($filter('translate')(a.workType.name))) {
@@ -1050,14 +1020,74 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 return 0;
                             });
 
-                            for (var q = 0; k < item.detailCultureList.length; q++) {
+                            for (var q = 0; q < item.detailCultureList.length; q++) {
                                 let row = item.detailCultureList[q];
                                 row['cultureName'] = $filter('translate')(row.culture ? row.culture.name : '')
                                 row['leftTotal'] = $filter('number')(row.plan - row.fact, 2)
                             }
                         }
+
+
+                        data.reportVehicleTaskList.sort(function (a, b) {
+                            if ($filter('translate')(a.workType.name).localeCompare($filter('translate')(b.workType.name)) < $filter('translate')(b.workType.name).localeCompare($filter('translate')(a.workType.name))) {
+                                return -1;
+                            }
+                            if ($filter('translate')(a.workType.name).localeCompare($filter('translate')(b.workType.name)) > $filter('translate')(b.workType.name).localeCompare($filter('translate')(a.workType.name))) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+
+                        let newReportVehicleTaskList = [];
+                        for (var k = 0; k < data.reportVehicleTaskList.length; k++) {
+                            let item = data.reportVehicleTaskList[k];
+
+                            item.detailGeozoneList.sort(function (a, b) {
+                                if (a.geozone.name.localeCompare(b.geozone.name) < b.geozone.name.localeCompare(a.geozone.name)) {
+                                    return -1;
+                                }
+                                if (a.geozone.name.localeCompare(b.geozone.name) > b.geozone.name.localeCompare(a.geozone.name)) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+                            item['workTypeName'] = $filter('translate')(item.workType.name)
+
+                            if (item.plan || item.fact) {
+                                for (var d = 0; d < item.detailGeozoneList.length; d++) {
+                                    let detailGeozone = item.detailGeozoneList[d];
+                                    detailGeozone['cultureName'] = $filter('translate')(detailGeozone.culture.name);
+                                    detailGeozone['timeInExel'] = $filter('date')(detailGeozone.time_in, 'dd.MM.yyyy HH:mm');
+                                    detailGeozone['timeOutExel'] = $filter('date')(detailGeozone.time_out, 'dd.MM.yyyy HH:mm');
+                                }
+                            } else {
+                                delete data.reportVehicleTaskList[item]
+                            }
+                            if (item.plan || item.fact) {
+                                newReportVehicleTaskList.push(item)
+                            }
+                        }
+                        data['newReportVehicleTaskList'] = newReportVehicleTaskList;
                     }
                     return rep.repData;
+                },
+                timesheetReport: function (serverData, callScope) {
+                    serverData.sort(function (a, b) {
+                        if (a.timesheetUser.fio.localeCompare(b.timesheetUser.fio) < b.timesheetUser.fio.localeCompare(a.timesheetUser.fio)) {
+                            return -1;
+                        }
+                        if (a.timesheetUser.fio.localeCompare(b.timesheetUser.fio) > b.timesheetUser.fio.localeCompare(a.timesheetUser.fio)) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let i = 0; i < serverData.length; i++) {
+                        let item = serverData[i];
+                        item['number'] = i + 1
+                        item['workingTime'] = $filter('secondsToDateTime2')(item.working_time)
+                    }
+
+                    return serverData;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
