@@ -150,10 +150,15 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 reportDate: data.params.month.name + " " + data.params.year,
                             }
                             break;
+                        case "landBankGeozoneDetail":
+                            let resultObject = this.landBankGeozoneDetail(data, callScope);
+                            postData.data = resultObject.data;
+                            postData.params = {total: resultObject.total}
+                            break;
                         default:
                             postData = {}
                     }
-                    //  console.log(JSON.stringify(postData))
+                    // console.log(JSON.stringify(postData))
                     this.sendRequest(postData);
 
                 },
@@ -1088,6 +1093,129 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
 
                     return serverData;
+                },
+                landBankGeozoneDetail: function (data, callScope) {
+                    let serverData = $.extend(true, [], data.data);
+                    let sortColumn = data.params.sortColumn;
+
+                    let bankOrganizationList = callScope.bankOrganizationList;
+                    let newArray = [];
+                    for (let o = 0; o < bankOrganizationList.length; o++) {
+                        for (let i = 0; i < serverData.length; i++) {
+                            let item = serverData[i];
+                            let tenant = null;
+                            if (item.bank_organization_id === bankOrganizationList[o].id) {
+                                for (let l = 0; l < newArray.length; l++) {
+                                    if (newArray[l].id === item.bank_organization_id) {
+                                        tenant = newArray[l]
+                                        break;
+                                    }
+                                }
+                                if (!tenant) {
+                                    tenant = {
+                                        id: bankOrganizationList[o].id,
+                                        name: bankOrganizationList[o].name,
+                                        isOwn: bankOrganizationList[o].isOwn
+
+                                    }
+                                    tenant['items'] = [];
+                                    newArray.push(tenant);
+                                }
+                                tenant.items.push(item)
+                            }
+                        }
+                    }
+
+                    newArray.sort(function (a, b) {
+                        if ((a.isOwn) < (b.isOwn)) {
+                            return 1;
+                        }
+                        if ((a.isOwn) > (b.isOwn)) {
+                            return -1;
+                        }
+                        return 0;
+                    });
+
+                    for (let i = 0; i < newArray.length; i++) {
+                        let bank_organization = newArray[i]
+
+                        //soooooorttt---------------------------------------------
+                        if (sortColumn.reverse === false) {
+                            bank_organization.items.sort(function (a, b) {
+                                var aa = eval("a." + (sortColumn.column))
+                                var bb = eval("b." + (sortColumn.column))
+                                if (aa == null) {
+                                    return 1;
+                                } else if (bb == null) {
+                                    return -1;
+                                }
+                                if (aa < bb) {
+                                    return -1;
+                                }
+                                if (aa > bb) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+                        } else {
+                            bank_organization.items.sort(function (a, b) {
+                                var aa = eval("a." + (sortColumn.column))
+                                var bb = eval("b." + (sortColumn.column))
+                                if (aa == null) {
+                                    return -1;
+                                } else if (bb == null) {
+                                    return 1;
+                                }
+                                if (aa < bb) {
+                                    return 1;
+                                }
+                                if (aa > bb) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+                        }
+                        //------------------------------------------------------
+
+                        for (let z = 0; z < bank_organization.items.length; z++) {
+                            let share = bank_organization.items[z];
+                            let right1_fio = ""
+                            for (let z = 0; z < share.right1FioList.length; z++) {
+                                right1_fio = right1_fio + "  " + share.right1FioList[z] ? (share.right1FioList[z]===null ? "" : share.right1FioList[z]) : '';
+                            }
+
+                            let right2_fio = ''
+                            if (share.bankTenant) {
+                                right2_fio = share.bankTenant.name;
+                            } else if (share.right2_fio) {
+                                right2_fio = share.right2_fio;
+                            }
+                            share['right1_fio'] = right1_fio;
+                            share['right2_fio'] = right2_fio;
+
+
+                            let kadastr_number = share.kadastr_number
+
+                            for (let h = 0; h < share.bankShareExchangeList.length; h++) {
+                                let record = share.bankShareExchangeList[h]
+                                kadastr_number += "   " + record.kadastr_number + " (" + $filter('number')(record.bankShareToSquare, 4) + ")";
+                            }
+                            share['kadastr_number'] = kadastr_number;
+                            share['shareSquareExel'] = callScope.getShareSquare(share, bank_organization);
+                            share['contractDateToExel'] =  share.contract_date_to ? $filter('date')(share.contract_date_to, 'dd.MM.yyyy') : ''
+                            share['contractSupplementaryDateToExel'] = share.contract_supplementary_date_to ? $filter('date')(share.contract_supplementary_date_to, 'dd.MM.yyyy') : ''
+                            share['contractStatusExel'] = callScope.getContractStatus(share)
+
+                        }
+                        bank_organization['totalBank'] = callScope.countShareSquare(bank_organization.items, callScope.shareDetailFilter, {bank_organization_id: bank_organization.id}) + callScope.countRoadSquare(callScope.bankGeozoneRoadList, callScope.shareDetailFilter, bank_organization.isOwn);
+
+                    }
+                    let total = $filter('number')(callScope.countShareSquare(serverData, callScope.shareDetailFilter, {}) + callScope.countRoadSquare(callScope.bankGeozoneRoadList, callScope.shareDetailFilter, true), 4);
+                    let resultObject = {
+                        data: newArray,
+                        total: total
+                    }
+                    return resultObject;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;

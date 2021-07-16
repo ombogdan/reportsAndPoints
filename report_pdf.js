@@ -129,6 +129,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 landBankAnalytic(rep)
             } else if (type == 'vehicleTask') {
                 vehicleTask(rep)
+            } else if (type == 'landBankGeozoneDetail') {
+                landBankGeozoneDetail(rep, params)
             } else {
                 console.log("Not Found " + type)
             }
@@ -10403,7 +10405,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         alignment: 'left'
                     },
                     {},
-                    {'text': '', colSpan: 5, border: [false, false, false, true]},
+                    {'text': '', colSpan: 6, border: [false, false, false, true]},
+                    {},
                     {},
                     {},
                     {},
@@ -10412,7 +10415,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         'text': $filter('number')(params.scope.getTotal(reportDetail, 'weightNetto'), 0),
                         style: 'header'
                     },
-                    {},
                 ]);
             }
             table_body.push([
@@ -10424,8 +10426,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     alignment: 'left'
                 },
                 {},
-                {'text': '', colSpan: 5, border: [false, false, false, true]},
+                {'text': '', colSpan: 6, border: [false, false, false, true]},
 
+                {},
                 {},
                 {},
                 {},
@@ -10434,7 +10437,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     'text': $filter('number')(params.scope.getTotalByArray(rep.repDetail, 'weightNetto'), 0),
                     style: 'header'
                 },
-                {},
             ]);
 
             if (rep.farm_device_name) {
@@ -13907,11 +13909,11 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         {'text': item.geozone ? item.geozone.name : '', style: 'tdName'},
                         {'text': $filter('number')(item.square, 2) + " " + $filter('translate')("ha"), style: 'td'},
                         {
-                            'text': $filter('number')(item.selfCaptureSquare, 2) + " " + $filter('translate')("ha"),
+                            'text': $filter('number')(item.selfCaptureSquare_percent, 4) + " %",
                             style: 'td'
                         },
                         {
-                            'text': $filter('number')(item.technologicalLossesSquare, 2) + " " + $filter('translate')("ha"),
+                            'text': $filter('number')(item.technologicalLossesSquare_percent, 4) + " %",
                             style: 'td'
                         },
                         {'text': $filter('number')(item.total_square_percent, 1) + ' %', style: 'td'},
@@ -13977,11 +13979,11 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         style: 'tableHeader'
                     },
                     {
-                        'text': $filter('number')(rep.analyticsGeozone.selfCaptureSquare, 2) + $filter('translate')("ha"),
+                        'text': $filter('number')(rep.analyticsGeozone.selfCaptureSquare_percent, 4) + " %",
                         style: 'tableHeader'
                     },
                     {
-                        'text': $filter('number')(rep.analyticsGeozone.technologicalLossesSquare, 2) + $filter('translate')("ha"),
+                        'text': $filter('number')(rep.analyticsGeozone.technologicalLossesSquare_percent, 4) + " %",
                         style: 'tableHeader'
                     },
                     {
@@ -14210,7 +14212,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 var data = rep.repData[i];
 
                 table1_body.push([
-                    {'text': data.geozoneGroup? data.geozoneGroup.name : '', colSpan: 9},
+                    {'text': data.geozoneGroup ? data.geozoneGroup.name : '', colSpan: 9},
                     {},
                     {},
                     {},
@@ -14485,6 +14487,314 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         color: 'black',
                         fontSize: 8,
                         fillColor: '#F2DEDE',
+                    }
+                }
+            };
+
+            if (func) {
+                const pdfDocGenerator = pdfMake.createPdf(content);
+                pdfDocGenerator.getBase64((data) => {
+                    func.call(this, data);
+                });
+            } else {
+                cratePdf(content);
+            }
+        }
+
+//земельний банк дані детальні по полю
+        function landBankGeozoneDetail(rep, params, func) {
+            var table1_body = [];
+            var content_detail = [];
+            console.log(params.sortColumn)
+
+            table1_body.push([
+                {'text': $filter('translate')('right1.fio'), style: 'tableHeader'},
+                {'text': $filter('translate')('share.number'), style: 'tableHeader'},
+                {'text': $filter('translate')('square'), style: 'tableHeader'},
+                {'text': $filter('translate')('contract.date.to'), style: 'tableHeader'},
+                {'text': $filter('translate')('contract.supplementary.date.to'), style: 'tableHeader'},
+                {'text': $filter('translate')('tenant'), style: 'tableHeader'},
+                {'text': $filter('translate')('state'), style: 'tableHeader'},
+            ]);
+
+
+            let bankOrganizationList = params.scope.bankOrganizationList;
+            let newArray = [];
+            for (let o = 0; o < bankOrganizationList.length; o++) {
+                for (let i = 0; i < rep.length; i++) {
+                    let item = rep[i];
+                    let tenant = null;
+                    if (item.bank_organization_id === bankOrganizationList[o].id) {
+                        for (let l = 0; l < newArray.length; l++) {
+                            if (newArray[l].id === item.bank_organization_id) {
+                                tenant = newArray[l]
+                                break;
+                            }
+                        }
+                        if (!tenant) {
+                            tenant = {
+                                id: bankOrganizationList[o].id,
+                                name: bankOrganizationList[o].name,
+                                isOwn: bankOrganizationList[o].isOwn
+
+                            }
+                            tenant['items'] = [];
+                            newArray.push(tenant);
+                        }
+
+                        let tenantName = item.bankTenant ? item.bankTenant.name : ''
+                        tenant.items.push(item)
+                    }
+                }
+            }
+
+            newArray.sort(function (a, b) {
+                if ((a.isOwn) < (b.isOwn)) {
+                    return 1;
+                }
+                if ((a.isOwn) > (b.isOwn)) {
+                    return -1;
+                }
+                return 0;
+            });
+
+            for (let i = 0; i < newArray.length; i++) {
+                let bank_organization = newArray[i]
+
+                //soooooorttt---------------------------------------------
+
+
+                if (params.sortColumn.reverse === false) {
+                    bank_organization.items.sort(function (a, b) {
+                        var aa = eval("a." + (params.sortColumn.column))
+                        var bb = eval("b." + (params.sortColumn.column))
+                        if (aa == null) {
+                            return 1;
+                        } else if (bb == null) {
+                            return -1;
+                        }
+                        if (aa < bb) {
+                            return -1;
+                        }
+                        if (aa > bb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    bank_organization.items.sort(function (a, b) {
+                        var aa = eval("a." + (params.sortColumn.column))
+                        var bb = eval("b." + (params.sortColumn.column))
+                        if (aa == null) {
+                            return -1;
+                        } else if (bb == null) {
+                            return 1;
+                        }
+                        if (aa < bb) {
+                            return 1;
+                        }
+                        if (aa > bb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                }
+                //------------------------------------------------------
+
+                for (let z = 0; z < bank_organization.items.length; z++) {
+                    let share = bank_organization.items[z];
+                    let right1_fio = ""
+                    for (let z = 0; z < share.right1FioList.length; z++) {
+                        right1_fio = right1_fio + "\n" + share.right1FioList[z] ? share.right1FioList[z] : '';
+                    }
+
+                    let right2_fio = ''
+                    if (share.bankTenant) {
+                        right2_fio = share.bankTenant.name;
+                    } else if (share.right2_fio) {
+                        right2_fio = share.right2_fio;
+                    }
+                    let kadastr_table = []
+
+                    kadastr_table.push([{
+                        'text': share.kadastr_number,
+                        style: 'td',
+                        border: [false, false, false, false]
+                    }])
+
+                    for (let h = 0; h < share.bankShareExchangeList.length; h++) {
+                        let record = share.bankShareExchangeList[h]
+                        kadastr_table.push([
+                            {
+                                'text': record.kadastr_number + " (" + $filter('number')(record.bankShareToSquare, 4) + ")",
+                                style: 'tdSmallRight',
+                                border: [false, false, false, false]
+                            }]);
+                    }
+
+                    table1_body.push([
+                        {'text': right1_fio, style: 'td'},
+                        {
+                            table: {
+                                alignment: 'left',
+                                margin: [0, 0, 0, 0],
+                                widths: [115],
+                                body: kadastr_table
+                            },
+
+                        },
+                        {
+                            'text': $filter('number')(params.scope.getShareSquare(share, bank_organization), 4),
+                            style: 'td'
+                        },
+                        {'text': $filter('date')(share.contract_date_to, 'dd.MM.yyyy'), style: 'td'},
+                        {'text': $filter('date')(share.contract_supplementary_date_to, 'dd.MM.yyyy'), style: 'td'},
+                        {'text': right2_fio, style: 'td'},
+                        {'text': params.scope.getContractStatus(share), style: 'td'},
+
+                    ]);
+                }
+
+                table1_body.push([
+                    {'text': ""},
+                    {'text': bank_organization.name, colSpan: 2, style: 'tdBold'},
+                    {},
+                    {
+                        'text': $filter('number')(params.scope.countShareSquare(bank_organization.items, params.scope.shareDetailFilter, {bank_organization_id: bank_organization.id}) + params.scope.countRoadSquare(params.scope.bankGeozoneRoadList, params.scope.shareDetailFilter, bank_organization.isOwn), 4),
+                        colSpan: 2,
+                        style: 'tdBold'
+                    },
+                    {'text': "", border: [true, true, false, true], style: 'td'},
+                    {'text': "", colSpan: 2},
+                    {},
+                ]);
+
+                if (i !== newArray.length - 1) {
+                    table1_body.push([
+                        {'text': "", colSpan: 7, border: [false, false, false, false]},
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                    ]);
+                }
+            }
+            table1_body.push([
+                {'text': ""},
+                {'text': $filter('translate')('total'), colSpan: 2, style: 'tdBold'},
+                {},
+                {
+                    'text': $filter('number')(params.scope.countShareSquare(rep, params.scope.shareDetailFilter, {}) + params.scope.countRoadSquare(params.scope.bankGeozoneRoadList, params.scope.shareDetailFilter, true), 4),
+                    colSpan: 2,
+                    style: 'tdBold'
+                },
+                {'text': "", border: [true, true, false, true], style: 'td'},
+                {'text': "", colSpan: 2},
+                {},
+            ]);
+
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('report.vehicle.task'),
+                    alignment: 'center',
+                    bold: 'true',
+                },
+                {
+                    'text': $filter('date')(rep.cluster_name),
+                    alignment: 'center',
+                    bold: 'true',
+                    margin: [0, 0, 0, 20],
+                },
+                {
+                    'text': $filter('date')(rep.oper_day, 'dd.MM.yyyy'),
+                    alignment: 'center',
+                    bold: 'true',
+                    margin: [0, 0, 0, 20],
+                },
+                {
+                    color: '#444',
+                    margin: [0, 0, 0, 20],
+                    table: {
+                        widths: [100, 120, 40, 45, 45, 75, 70],
+                        heights: 20,
+                        body: table1_body,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                }
+            )
+
+            var content = {
+                info: {
+                    title: 'Agrocontrol',
+                    author: 'Agrocontrol',
+                    subject: '',
+                    keywords: '',
+                },
+                footer: {
+                    columns: [
+                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, 0, 20, 5]}
+                    ]
+                },
+                pageMargins: [15, 10, 20, 20],
+                extend: 'pdfHtml5',
+                pageSize: 'A4',
+                content: [
+                    content_detail
+                ],
+                styles: {
+                    tableHeader: {
+                        alignment: 'center',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    tableHeaderLeft: {
+                        alignment: 'left',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    td: {
+                        alignment: 'center',
+                        height: '100',
+                        fontSize: 8
+                    },
+                    tdSmall: {
+                        alignment: 'center',
+                        fontSize: 7
+                    },
+                    tdBold: {
+                        alignment: 'center',
+                        height: '100',
+                        fontSize: 8,
+                        bold: 'true'
+                    },
+                    header: {
+                        fontSize: 9,
+                        bold: 'true',
+                        color: 'black',
+                        alignment: 'center'
+                    },
+                    tdRight: {
+                        alignment: 'right',
+                        color: 'black',
+                        fontSize: 8,
+                    },
+                    tdLeft: {
+                        alignment: 'left',
+                        color: 'black',
+                        fontSize: 8,
+                    },
+                    tdSmallRight: {
+                        alignment: 'right',
+                        color: 'black',
+                        fontSize: 6,
                     }
                 }
             };
