@@ -14505,8 +14505,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
         function landBankGeozoneDetail(rep, params, func) {
             var table1_body = [];
             var content_detail = [];
-            console.log(params.sortColumn)
-
             table1_body.push([
                 {'text': $filter('translate')('right1.fio'), style: 'tableHeader'},
                 {'text': $filter('translate')('share.number'), style: 'tableHeader'},
@@ -14698,7 +14696,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             content_detail.push(
                 {
-                    'text': $filter('translate')('report.vehicle.task'),
+                    'text': params.shareDetailTitle,
                     alignment: 'center',
                     bold: 'true',
                 },
