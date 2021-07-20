@@ -199,8 +199,6 @@ angular.module('agro.utils.xls', ['ngResource'])
                             break;
                         case "byCombine":
                             postData.data = this.byCombine(data.data, callScope);
-                            console.log(data)
-
                             postData.params = {
                                 dateStartExel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
                                 dateEndExel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
@@ -211,12 +209,53 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 vehicle_name: data.data.vehicle_from_name
                             }
                             break;
+                        case "byFarmDevice":
+                            postData.data = this.byFarmDevice(data.data, callScope);
+                            postData.params = {
+                                dateStartExel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                dateEndExel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                weight_m_kub: $filter('translate')('weight.m_kub').replace(regex, '³'),
+                                weightNetto: callScope.getTotalByArray(data.data.repDetail, 'weightNetto', 0),
+                                farm_name: data.data.farm_name
+                            }
+                            break;
+                        case "unloadingByField":
+                            postData.data = this.unloadingByField(data.data, callScope);
+                            postData.params = {
+                                date_rep: $filter('date')(data.data.date_rep * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            }
+                            break;
+                        case "byOverloader":
+                            postData.data = this.byOverloader(data.data, callScope);
+
+                            postData.params = {
+                                date_start: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                weight_m_kub: $filter('translate')('weight.m_kub').replace(regex, '³'),
+                                harvestUnloadingToListLength: data.data.harvestUnloadingToList.length,
+                                harvestUnloadingFromListLength: data.data.harvestUnloadingFromList.length,
+                                weight_kub_to: callScope.getTotal(data.data.harvestUnloadingToList, 'weight_kub'),
+                                weight_kub_from: callScope.getTotal(data.data.harvestUnloadingToList, 'weight_kg'),
+                                weight_kg_from: callScope.getTotal(data.data.harvestUnloadingToList, 'weight_kub'),
+                                weight_kg_to: callScope.getTotal(data.data.harvestUnloadingToList, 'weight_kg'),
+                            }
+                            break;
+                        case "byOverloaderConsolidated":
+                            postData.data = this.byOverloaderConsolidated(data.data, callScope);
+
+                            postData.params = {
+                                date_start: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                weight_m_kub: $filter('translate')('weight.m_kub').replace(regex, '³'),
+                                overloader: data.data.overloader ? data.data.overloader : ''
+                            }
+                            break;
 
                         default:
                             postData = {}
                     }
                     // console.log(postData)
-                    console.log(JSON.stringify(postData))
+                    // console.log(JSON.stringify(postData))
                     this.sendRequest(postData);
                 },
                 agroworkGeneral: function (data, callScope) {
@@ -1539,6 +1578,138 @@ angular.module('agro.utils.xls', ['ngResource'])
                         })
                     }
                     return newArray
+                }, byFarmDevice: function (data, callScope) {
+                    let rep = $.extend(true, [], data);
+                    rep.repDetail.sort(function (a, b) {
+                        if (a.tm < b.tm) {
+                            return -1;
+                        }
+                        if (a.tm > b.tm) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    let newArray = [];
+                    for (var i = 0; i < rep.repDetail.length; i++) {
+                        var reportDetail = rep.repDetail[i];
+                        let detailArray = []
+                        for (var r = 0; r < reportDetail.length; r++) {
+                            var detail = reportDetail[r];
+                            detail['tmExel'] = $filter('date')(detail.tm * 1000, 'dd.MM.yyyy HH:mm:ss')
+                            detail['culture_name_exel'] = detail.culture_name ? $filter('translate')(detail.culture_name) : '';
+                            detail['driver_to_name'] = detail.driver_to_name ? detail.driver_to_name : '';
+                            if (!detail.driver_name) {
+                                detail.driver_name = ''
+                            }
+                            if (!detail.hunidity) {
+                                detail.hunidity = ''
+                            }
+                            detail.harvestUnloadingList.sort(function (a, b) {
+                                if (a.tm < b.tm) {
+                                    return -1;
+                                }
+                                if (a.tm > b.tm) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+
+                            for (var l = 0; l < detail.harvestUnloadingList.length; l++) {
+                                var unloading = detail.harvestUnloadingList[l];
+                                unloading['tmExel'] = $filter('date')(unloading.tm * 1000, 'dd.MM.yyyy HH:mm:ss')
+                                unloading['culture_name_exel'] = unloading.culture_name ? $filter('translate')(unloading.culture_name) : '';
+                            }
+                            detailArray.push(detail);
+                        }
+                        newArray.push({
+                            reportDetailArray: detailArray,
+                            byDate: $filter('date')(reportDetail[0].tm * 1000, 'dd.MM.yyyy'),
+                            byWeightNetto: callScope.getTotal(reportDetail, 'weightNetto')
+                        })
+                    }
+                    return newArray
+                }, unloadingByField: function (data, callScope) {
+                    let rep = $.extend(true, [], data);
+
+                    rep.repDetail.sort(function (a, b) {
+                        if (a.geozone_name.substr(0, 1).toUpperCase() === 'І' || a.geozone_name.substr(0, 1).toUpperCase() === 'Є' || a.geozone_name.substr(0, 1).toUpperCase() === 'Ї') {
+                            return 1;
+                        }
+
+                        if (b.geozone_name.substr(0, 1).toUpperCase() === 'І' || b.geozone_name.substr(0, 1).toUpperCase() === 'Є' || b.geozone_name.substr(0, 1).toUpperCase() === 'Ї') {
+                            return -1;
+                        }
+
+                        if ($filter('lowercase')(a.geozone_name) < $filter('lowercase')(b.geozone_name)) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')(a.geozone_name) > $filter('lowercase')(b.geozone_name)) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+
+                    for (var i = 0; i < rep.repDetail.length; i++) {
+                        var detail = rep.repDetail[i];
+                        detail['culture_name_exel'] = detail.culture_name ? $filter('translate')(detail.culture_name) : '';
+                        detail['seed_name_exel'] = detail.seed_name ? $filter('translate')(detail.seed_name) : '';
+                        detail['date_harvest_exel'] = detail.date_harvest ? $filter('date')(detail.date_harvest, 'dd.MM.yyyy') : '';
+                    }
+
+                    return rep.repDetail;
+                }, byOverloader: function (data, callScope) {
+                    let rep = $.extend(true, [], data);
+                    for (var i = 0; i < rep.harvestUnloadingToList.length; i++) {
+                        var detail = rep.harvestUnloadingToList[i];
+                        detail['tmExel'] = $filter('date')(detail.tm * 1000, 'dd.MM.yyyy HH:mm:ss')
+                        detail['timeUnloadingExel'] = $filter('secondsToDateTime')(detail.tm_end - detail.tm)
+                        if (!detail.vehicle_from_name) {
+                            detail.vehicle_from_name = ''
+                        }
+                        if (!detail.vehicle_to_name) {
+                            detail.vehicle_to_name = ''
+                        }
+                        if (!detail.driver_to_name) {
+                            detail.driver_to_name = ''
+                        }
+                        detail['culture_name_exel'] = detail.culture_name ? $filter('translate')(detail.culture_name) : '';
+                    }
+
+                    for (var l = 0; l < rep.harvestUnloadingFromList.length; l++) {
+                        var detail = rep.harvestUnloadingFromList[l];
+                        detail['tmExel'] = $filter('date')(detail.tm * 1000, 'dd.MM.yyyy HH:mm:ss')
+                        detail['timeUnloadingExel'] = $filter('secondsToDateTime')(detail.tm_end - detail.tm)
+                        detail['culture_name_exel'] = detail.culture_name ? $filter('translate')(detail.culture_name) : '';
+
+                        if (!detail.vehicle_from_name) {
+                            detail.vehicle_from_name = ''
+                        }
+                        if (!detail.vehicle_to_name) {
+                            detail.vehicle_to_name = ''
+                        }
+                        if (!detail.driver_to_name) {
+                            detail.driver_to_name = ''
+                        }
+                    }
+
+                    return rep;
+                }, byOverloaderConsolidated: function (data, callScope) {
+                    let rep = $.extend(true, [], data);
+
+                    for (var i = 0; i < rep.dataList.length; i++) {
+                        var repDetail = rep.dataList[i]
+                        repDetail['harvestUnloadingListLength'] = repDetail.harvestUnloadingList.length
+
+                        for (var h = 0; h < repDetail.harvestUnloadingList.length; h++) {
+                            var unloading = repDetail.harvestUnloadingList[h];
+                            unloading['tmExel'] = $filter('date')(unloading.tm * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            unloading['unloadingTmExel'] = $filter('secondsToDateTime')(unloading.tm_end - unloading.tm);
+                            unloading['culture_name_exel'] = $filter('translate')(unloading.culture_name);
+                        }
+                    }
+
+                    return rep.dataList;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
