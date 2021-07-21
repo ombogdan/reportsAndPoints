@@ -250,6 +250,26 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 overloader: data.data.overloader ? data.data.overloader : ''
                             }
                             break;
+                        case "grainToFarm":
+                            postData.data = this.grainToFarm(data.data, callScope);
+
+                            postData.params = {
+                                date_start: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                weight_m_kub: $filter('translate')('weight.m_kub').replace(regex, '³'),
+                                farm_name: data.data.farm_name ? data.data.farm_name : ''
+                            }
+                            break;
+                        case "grainToFarmConsolidated":
+                            postData.data = this.grainToFarmConsolidated(data.data, callScope);
+
+                            postData.params = {
+                                date_start: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                weight_m_kub: $filter('translate')('weight.m_kub').replace(regex, '³'),
+                                farm_name: data.data.farm_name ? data.data.farm_name : ''
+                            }
+                            break;
 
                         default:
                             postData = {}
@@ -1706,10 +1726,139 @@ angular.module('agro.utils.xls', ['ngResource'])
                             unloading['tmExel'] = $filter('date')(unloading.tm * 1000, 'dd.MM.yyyy HH:mm:ss');
                             unloading['unloadingTmExel'] = $filter('secondsToDateTime')(unloading.tm_end - unloading.tm);
                             unloading['culture_name_exel'] = $filter('translate')(unloading.culture_name);
+                            if (!unloading['weight']) {
+                                unloading['weight_kg'] = ''
+                            }
                         }
                     }
 
                     return rep.dataList;
+                }, grainToFarm: function (data, callScope) {
+                    let rep = $.extend(true, [], data);
+                    rep.repData.sort(function (a, b) {
+                        if (a.tmFarm == null) {
+                            return 1;
+                        } else if (b.tmFarm == null) {
+                            return -1;
+                        }
+                        if (a.tmFarm < b.tmFarm) {
+                            return -1;
+                        }
+                        if (a.tmFarm > b.tmFarm) {
+                            return 1;
+                        }
+                        return 0;
+
+                    });
+
+                    for (var i = 0; i < rep.repData.length; i++) {
+                        var repDetail = rep.repData[i]
+
+                        if (repDetail.vehicle) {
+                            repDetail['vehicle'] = repDetail.vehicle.name;
+                        } else {
+                            repDetail['vehicle'] = '';
+                        }
+
+                        if (repDetail.driver) {
+                            repDetail['driver'] = repDetail.driver.name;
+                        } else {
+                            repDetail['driver'] = '';
+                        }
+
+                        if (repDetail.tmFarm) {
+                            repDetail['tmFarm'] = $filter('date')(repDetail.tmFarm * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        } else {
+                            repDetail['tmFarm'] = '';
+                        }
+
+                        repDetail['tmUnloadingExel'] = $filter('date')(repDetail.tmUnloading * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        repDetail['time_start_going_exel'] = $filter('date')(repDetail.time_start_going * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        repDetail['time_going_exel'] = $filter('secondsToDateTime')(repDetail.time_going);
+                        for (var h = 0; h < repDetail.detailUnloadingList.length; h++) {
+                            var unloading = repDetail.detailUnloadingList[h];
+                            unloading['harvestUnloadingTmExel'] = $filter('date')(unloading.harvestUnloading.tm * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            unloading['culture_name_exel'] = unloading.harvestUnloading.culture_name ? $filter('translate')(unloading.harvestUnloading.culture_name) : '';
+                            unloading['harvestUnloadingTmEnd'] = $filter('secondsToDateTime')(unloading.harvestUnloading.tm_end - unloading.harvestUnloading.tm);
+                            if (!unloading.weight) {
+                                unloading.weight = ''
+                            }
+                            if (!unloading.harvestUnloading.driver_from_name) {
+                                unloading.harvestUnloading.driver_from_name = ''
+                            }
+                            if (!unloading.harvestUnloading.vehicle_from_name) {
+                                unloading.harvestUnloading.vehicle_from_name = ''
+                            }
+
+                            for (var u = 0; u < unloading.unloadingToOverloaderList.length; u++) {
+                                var toOverloader = unloading.unloadingToOverloaderList[u];
+                                toOverloader['tmExel'] = $filter('date')(toOverloader.tm * 1000, 'dd.MM.yyyy HH:mm:ss')
+                                toOverloader['culture_name_exel'] = toOverloader.culture_name ? $filter('translate')(toOverloader.culture_name) : '';
+                                toOverloader['toOverloaderTmEnd'] = $filter('secondsToDateTime')(toOverloader.tm_end - toOverloader.tm);
+                                if (!toOverloader.weight_kg) {
+                                    toOverloader.weight_kg = ''
+                                }
+                                if (!toOverloader.driver_from_name) {
+                                    toOverloader.driver_from_name = ''
+                                }
+                                if (!toOverloader.vehicle_from_name) {
+                                    toOverloader.vehicle_from_name = ''
+                                }
+                            }
+                        }
+                    }
+                    return rep.repData;
+                }, grainToFarmConsolidated: function (serverData, callScope) {
+                    let rep = $.extend(true, [], serverData);
+                    rep.repData.sort(function (a, b) {
+                        if (a.tmFarm === b.tmFarm) {
+                            return 0;
+                        } else if (a.tmFarm === null) {
+                            return 1;
+                        } else if (b.tmFarm === null) {
+                            return -1;
+                        } else if (rep.repData.tmFarm) {
+                            return a.tmFarm < b.tmFarm ? 11 : -1;
+                        } else {
+                            return a.tmFarm < b.tmFarm ? -1 : 1;
+                        }
+                    });
+
+
+                    for (var i = 0; i < rep.repData.length; i++) {
+                        var data = rep.repData[i]
+                        var geozones = '';
+                        let tmFarmExel = ''
+
+                        for (var z = 0; z < data.geozoneList.length; z++) {
+                            geozones += data.geozoneList[z]
+                        }
+                        data['geozones_exel'] = geozones
+
+                        if (data.tmFarm !== null) {
+                            data['tmFarmExel'] = $filter('date')(data.tmFarm * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        }
+
+                        data['culture_exel'] = ''
+                        if (data.geozoneUnloading) {
+                            if (data.geozoneUnloading.culture) {
+                                data['culture_exel']  = data.geozoneUnloading.culture.name ? $filter('translate')(data.geozoneUnloading.culture.name) : '';
+                            }
+                        }
+                        data['vehicle_exel']  = '';
+                        if (data.vehicle) {
+                            data['vehicle_exel'] = data.vehicle.name;
+                        }
+                        data['driver_exel'] = '';
+                        if (data.driver) {
+                            data['driver_exel']  = data.driver.name
+                        }
+                        data['tmUnloadingExel'] = $filter('date')(data.tmUnloading * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        data['time_start_going_exel'] = $filter('date')(data.time_start_going * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        data['time_going_exel'] = $filter('secondsToDateTime')(data.time_going);
+                    }
+
+                    return rep.repData;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
