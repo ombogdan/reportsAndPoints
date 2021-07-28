@@ -22,7 +22,7 @@ client.connect({ port: port, host: host }, function() {
     console.log('TCP connection established with the server.');
     // 1355026070838020  cygnet 1txt
     // 13226009700069  piven  txt
-    var data = '352353088292278'+';NA;';
+    var data = '352353084610770'+';NA;';
     var crc = calc_crc16(data);
 
     var msg = '#L#'+data+crc.toString(16)+'\r\n';
@@ -48,7 +48,7 @@ client.on('data', function(chunk) {
         client.end();
     }
 
-    setTimeout(sendMessage, 2000);
+    setTimeout(sendMessage, 3000);
 
     // Request an end to the connection after the data has been received.
     //client.end();

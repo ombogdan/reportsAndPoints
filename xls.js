@@ -154,7 +154,11 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "landBankGeozoneDetail":
                             let resultObject = this.landBankGeozoneDetail(data, callScope);
                             postData.data = resultObject.data;
-                            postData.params = {total: resultObject.total}
+                            postData.params = {
+                                total: resultObject.total,
+                                technologicalLossesSquare: $filter('number')(data.params.technologicalLossesSquare, 2),
+                                selfCaptureSquare: $filter('number')(data.params.selfCaptureSquare, 2)
+                            }
                             break;
                         case "farmByDevice":
                             postData.data = this.farmByDevice(data.data, callScope);
@@ -1842,16 +1846,16 @@ angular.module('agro.utils.xls', ['ngResource'])
                         data['culture_exel'] = ''
                         if (data.geozoneUnloading) {
                             if (data.geozoneUnloading.culture) {
-                                data['culture_exel']  = data.geozoneUnloading.culture.name ? $filter('translate')(data.geozoneUnloading.culture.name) : '';
+                                data['culture_exel'] = data.geozoneUnloading.culture.name ? $filter('translate')(data.geozoneUnloading.culture.name) : '';
                             }
                         }
-                        data['vehicle_exel']  = '';
+                        data['vehicle_exel'] = '';
                         if (data.vehicle) {
                             data['vehicle_exel'] = data.vehicle.name;
                         }
                         data['driver_exel'] = '';
                         if (data.driver) {
-                            data['driver_exel']  = data.driver.name
+                            data['driver_exel'] = data.driver.name
                         }
                         data['tmUnloadingExel'] = $filter('date')(data.tmUnloading * 1000, 'dd.MM.yyyy HH:mm:ss');
                         data['time_start_going_exel'] = $filter('date')(data.time_start_going * 1000, 'dd.MM.yyyy HH:mm:ss');
