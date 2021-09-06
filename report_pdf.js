@@ -4673,7 +4673,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             'text': $filter('date')(data.fact_date_start, 'dd.MM.yyyy') + " - " + $filter('date')(data.fact_date_end, 'dd.MM.yyyy'),
                             style: 'td'
                         },
-                        {'text': data.geozone? data.geozone.name : '', style: 'td'},
+                        {'text': data.geozone ? data.geozone.name : '', style: 'td'},
                         {
                             'text': $filter('number')(data.fact_material, 2) + " " + $filter('translate')('material.unit.kg_s'),
                             style: 'td'
@@ -4688,7 +4688,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             'text': $filter('date')(data.fact_date_start, 'dd.MM.yyyy') + " - " + $filter('date')(data.fact_date_end, 'dd.MM.yyyy'),
                             style: 'td'
                         },
-                        {'text': data.geozone? data.geozone.name : '', style: 'td'},
+                        {'text': data.geozone ? data.geozone.name : '', style: 'td'},
                         {
                             'text': $filter('number')(data.fact_material, 2) + " " + $filter('translate')('material.unit.litr1_s'),
                             style: 'td'
@@ -8263,7 +8263,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     var unit = [];
                     var geozone = [];
                     if (reportDetail.geozone != null) {
-                        geozone.push([{'text': reportDetail.geozone? reportDetail.geozone.name : '', style: 'td'}])
+                        geozone.push([{'text': reportDetail.geozone ? reportDetail.geozone.name : '', style: 'td'}])
                         unit.push([{'text': $filter('translate')('ha'), style: 'td'}])
                     } else {
                         geozone.push([{'text': $filter('translate')('crossing'), style: 'td'}])
@@ -8444,7 +8444,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     var unit = [];
                     var geozone = [];
                     if (reportDetail.geozone != null) {
-                        geozone.push([{'text': reportDetail.geozone? reportDetail.geozone.name : '', style: 'td'}])
+                        geozone.push([{'text': reportDetail.geozone ? reportDetail.geozone.name : '', style: 'td'}])
                         unit.push([{'text': $filter('translate')('ha'), style: 'td'}])
                     } else {
                         geozone.push([{'text': $filter('translate')('crossing'), style: 'td'}])
@@ -10114,6 +10114,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('maxspeed'), style: 'tableHeader'},
                 {'text': $filter('translate')('time.start.going'), style: 'tableHeader'},
                 {'text': $filter('translate')('time.end.going'), style: 'tableHeader'},
+                {'text': $filter('translate')('hour_shift.duration'), style: 'tableHeader'},
             ]);
 
             for (var i = 0; i < rep.data.length; i++) {
@@ -10130,6 +10131,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {'text': $filter('number')(detail.max_speed, 0), style: 'td'},
                     {'text': $filter('date')(detail.time_start * 1000, 'HH:mm'), style: 'td'},
                     {'text': $filter('date')(detail.time_end * 1000, 'HH:mm'), style: 'td'},
+                    {'text': $filter('secondsToDateTime2')(detail.time_end-detail.time_start), style: 'td'},
                 ]);
 
 
@@ -10140,7 +10142,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     color: '#444',
                     margin: [0, 0, 0, 20],
                     table: {
-                        widths: [60, 125, 130, 50, 50, 50, 60, 65, 60, 60],
+                        widths: [50, 95, 100, 50, 50, 45, 60, 65, 55, 50, 90],
                         heights: 20,
                         body: table_body,
                         alignment: 'center',
@@ -12380,7 +12382,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     }
 
                     table_body.push([
-                        {'text': item.geozone ? item.geozone.name: '', style: 'td'},
+                        {'text': item.geozone ? item.geozone.name : '', style: 'td'},
                         total,
                         {'text': $filter('number')(item.cropRotation_square, 2), style: 'td'},
                         {'text': $filter('number')(item.cropRotation_square - item.total, 2), style: 'td'}
@@ -14234,7 +14236,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 });
 
                 table1_body.push([
-
                     {'text': '', border: [false, true, false, false]},
                     {
                         'text': $filter('translate')('worktypes'),
@@ -14249,7 +14250,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {},
                     {'text': $filter('translate')('plan.oper_day'), style: 'tableHeader'},
                     {'text': $filter('translate')('fact.oper_day'), style: 'tableHeader'},
-
                 ]);
                 for (var k = 0; k < data.reportVehicleTaskList.length; k++) {
                     let item = data.reportVehicleTaskList[k];
@@ -14264,7 +14264,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {},
                             {'text': $filter('number')(item.plan, 2), style: 'td'},
                             {'text': $filter('number')(item.fact, 2), style: 'td'},
-
                         ]);
                     }
                     item.detailGeozoneList.sort(function (a, b) {
@@ -14287,26 +14286,30 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             {'text': $filter('translate')('timein'), style: 'tableHeader'},
                             {'text': $filter('translate')('timeout'), style: 'tableHeader'},
                             {'text': $filter('translate')('processed.oper_day'), style: 'tableHeader'},
-                            {'text': $filter('translate')('processed.fact.agrooperation'), style: 'tableHeader'},
-
-
+                            {'text': $filter('translate')('processed.fact.agrooperation'), style: 'tableHeader'}
                         ]);
                         for (var d = 0; d < item.detailGeozoneList.length; d++) {
                             let detailGeozone = item.detailGeozoneList[d];
                             table1_body.push([
                                 {'text': '', border: [false, false, false, false]},
                                 {'text': '', border: [false, false, false, false]},
-                                {'text': $filter('translate')(detailGeozone.geozone ? detailGeozone.geozone.name : ''), style: 'td'},
-                                {'text': $filter('translate')(detailGeozone.culture ? detailGeozone.culture.name : ''), style: 'td'},
-                                {'text': $filter('number')(detailGeozone.geozone ? detailGeozone.geozone.square_real : 0, 2), style: 'td'},
+                                {
+                                    'text': $filter('translate')(detailGeozone.geozone ? detailGeozone.geozone.name : ''),
+                                    style: 'td'
+                                },
+                                {
+                                    'text': $filter('translate')(detailGeozone.culture ? detailGeozone.culture.name : ''),
+                                    style: 'td'
+                                },
+                                {
+                                    'text': $filter('number')(detailGeozone.geozone ? detailGeozone.geozone.square_real : 0, 2),
+                                    style: 'td'
+                                },
                                 {'text': $filter('date')(detailGeozone.time_in, 'dd.MM.yyyy HH:mm'), style: 'td'},
                                 {'text': $filter('date')(detailGeozone.time_out, 'dd.MM.yyyy HH:mm'), style: 'td'},
                                 {'text': $filter('number')(detailGeozone.processed_oper_day, 2), style: 'td'},
                                 {'text': $filter('number')(detailGeozone.processed_total, 2), style: 'td'},
-
-
                             ]);
-
                         }
                     }
                 }
@@ -14690,7 +14693,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 },
                 {'text': "", border: [true, true, false, true], style: 'td'},
                 {'text': "", colSpan: 2},
-                {},
+                {}
             ]);
 
             content_detail.push(
@@ -14719,21 +14722,21 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         heights: 20,
                         body: table1_body,
                         alignment: 'center',
-                        dontBreakRows: true,
-                    },
+                        dontBreakRows: true
+                    }
                 },
                 {
-                    'text': $filter('translate')('geozone.self.capture')+': '+$filter('number')(params.selfCaptureSquare, 2)+$filter('translate')('ha'),
+                    'text': $filter('translate')('geozone.self.capture') + ': ' + $filter('number')(params.selfCaptureSquare, 2) + $filter('translate')('ha'),
                     alignment: 'left',
                     bold: 'true',
-                    fontSize: 9,
+                    fontSize: 9
                 },
                 {
-                    'text': $filter('translate')('geozone.technological.losses')+': '+$filter('number')(params.technologicalLossesSquare, 2)+$filter('translate')('ha'),
+                    'text': $filter('translate')('geozone.technological.losses') + ': ' + $filter('number')(params.technologicalLossesSquare, 2) + $filter('translate')('ha'),
                     alignment: 'left',
                     bold: 'true',
-                    fontSize: 9,
-                },
+                    fontSize: 9
+                }
             )
 
             var content = {

@@ -20,9 +20,23 @@ angular.module('agro.utils.xls', ['ngResource'])
                     switch (type) {
                         case "materialUsedSeed":
                             postData.data = this.materialUsedSeed(data.data, callScope);
+                            postData.params = {
+                                storeName: data.params.storeName,
+                                structurel_unit: data.params.geozoneName !== '' ? data.params.geozoneName : data.params.geozoneGroupName,
+                                agricultural_enterprise: data.params.clusterName,
+                                date_from: data.params['date_from'],
+                                date_to: data.params['date_to']
+                            }
                             break;
                         case "materialUsedFertPlant":
                             postData.data = this.materialUsedFertPlant(data.data, callScope);
+                            postData.params = {
+                                storeName: data.params.storeName,
+                                structurel_unit: data.params.geozoneName !== '' ? data.params.geozoneName : data.params.geozoneGroupName,
+                                agricultural_enterprise: data.params.clusterName,
+                                date_from: data.params['date_from'],
+                                date_to: data.params['date_to']
+                            }
                             break;
                         case "agroworkGeneral":
                             postData.data = this.agroworkGeneral(data.data, callScope);
@@ -165,7 +179,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                             postData.params = {
                                 dateStartExel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
                                 dateEndExel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
-                                weightNettoTotal: callScope.getTotalByArray(data.repDetail, 'weightNetto')
+                                weightNettoTotal: callScope.getTotalByArray(data.data.repDetail, 'weightNetto')
                             }
                             break;
                         case "controlWeightByUnloading":
@@ -318,18 +332,20 @@ angular.module('agro.utils.xls', ['ngResource'])
                 materialUsedSeed: function (data, callScope) {
                     var res = [];
                     for (var i = 0; i < data.length; i++) {
-                        res.push({
-                            'seed': data[i].material ? $filter('translate')(data[i].material.name) : '',
-                            'culture': data[i].material ? $filter('translate')(data[i].material.cultureName) : '',
-                            'geozoneName': data[i].geozone ? data[i].geozone.name : '',
-                            'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
-                            'geozoneSquare': data[i].geozone ? data[i].geozone.square_real : '',
-                            'unitName': callScope.getUnitName(data[i].materialUnit),
-                            'byHaPlan': '',
-                            'totalPlan': '',
-                            'byHaFact': data[i].materialRateFact,
-                            'totalFact': data[i].materialRateFactTotal
-                        });
+                        if(data[i].materialRateFactTotal>0 || data[i].materialRateFact>0){
+                            res.push({
+                                'seed': data[i].material ? $filter('translate')(data[i].material.name) : '',
+                                'culture': data[i].material ? $filter('translate')(data[i].material.cultureName) : '',
+                                'geozoneName': data[i].geozone ? data[i].geozone.name : '',
+                                'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
+                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : '',
+                                'unitName': callScope.getUnitName(data[i].materialUnit),
+                                'byHaPlan': '',
+                                'totalPlan': '',
+                                'byHaFact': data[i].materialRateFact,
+                                'totalFact': data[i].materialRateFactTotal
+                            });
+                        }
                     }
                     res.sort((a, b) => (a.seed > b.seed) ? 1 : ((b.seed > a.seed) ? -1 : 0))
                     return res;
@@ -338,17 +354,19 @@ angular.module('agro.utils.xls', ['ngResource'])
                 materialUsedFertPlant: function (data, callScope) {
                     var res = [];
                     for (var i = 0; i < data.length; i++) {
-                        res.push({
-                            'materialName': data[i].material ? $filter('translate')(data[i].material.name) : '',
-                            'geozoneName': data[i].geozone ? data[i].geozone.name : '',
-                            'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
-                            'geozoneSquare': data[i].geozone ? data[i].geozone.square_real : '',
-                            'unitName': callScope.getUnitName(data[i].materialUnit),
-                            'byHaPlan': '',
-                            'totalPlan': '',
-                            'byHaFact': data[i].materialRateFact,
-                            'totalFact': data[i].materialRateFactTotal
-                        });
+                        if(data[i].materialRateFactTotal>0 || data[i].materialRateFact>0){
+                            res.push({
+                                'materialName': data[i].material ? $filter('translate')(data[i].material.name) : '',
+                                'geozoneName': data[i].geozone ? data[i].geozone.name : '',
+                                'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
+                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : '',
+                                'unitName': callScope.getUnitName(data[i].materialUnit),
+                                'byHaPlan': '',
+                                'totalPlan': '',
+                                'byHaFact': data[i].materialRateFact,
+                                'totalFact': data[i].materialRateFactTotal
+                            });
+                        }
                     }
                     res.sort((a, b) => (a.materialName > b.materialName) ? 1 : ((b.materialName > a.materialName) ? -1 : 0))
                     return res;
@@ -1030,6 +1048,11 @@ angular.module('agro.utils.xls', ['ngResource'])
                             record.waybillTotal[0]['16'] += item.fuel_used_moving;
                             record.waybillTotal[0]['17'] += item.processed_count;
                         });
+                        record.waybillTotal[0]['3'] = $filter('secondsToDateTime')(record.waybillTotal[0]['3'])
+                        record.waybillTotal[0]['4'] = $filter('secondsToDateTime')(record.waybillTotal[0]['4'])
+                        record.waybillTotal[0]['5'] = $filter('secondsToDateTime')(record.waybillTotal[0]['5'])
+                        record.waybillTotal[0]['6'] = $filter('secondsToDateTime')(record.waybillTotal[0]['6'])
+                        record.waybillTotal[0]['7'] = $filter('secondsToDateTime')(record.waybillTotal[0]['7'])
                         //total
                         if (record.waybillList.length > 0) {
                             record['waybillTranslate'] = [{

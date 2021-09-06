@@ -85,6 +85,7 @@ function sendMessage(){
     var gps = DecimalToNMEAConverter(arr[1],arr[2]);
     data = date+';'+time+';'+gps[0]+';N;'+gps[1]+';E;'+row;//0;0;0;12;0;;;;;pa1:3:1,par2:3:2;';
     crc = calc_crc16(data);
+
     client.write(command+data+crc+'\r\n');
 
     if (idx>=pointList.length){
