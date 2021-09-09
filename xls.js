@@ -289,6 +289,36 @@ angular.module('agro.utils.xls', ['ngResource'])
                             }
                             break;
 
+                        case "materialWaybill":
+                            let resultData = this.materialWaybill(data.params, callScope);
+
+                            let totalPrice = 0;
+                            for (let i = 0; i < resultData.length; i++) {
+                                console.log(parseFloat(resultData[i].price))
+                                totalPrice += resultData[i].price ? parseFloat(resultData[i].price) : 0;
+                            }
+
+                            let {
+                                number,
+                                date,
+                                storageStore,
+                                storeKeeper,
+                                storageStoreTo,
+                                vehicle,
+                                driver
+                            } = data.params.materialWaybill;
+
+                            postData.params = {
+                                number: number,
+                                date: $filter('date')(date, 'dd.MM.yyyy'),
+                                storeFrom: storageStore.name + " (" + storeKeeper.name + ")",
+                                storeTo: storageStoreTo.name,
+                                byVehicle: driver ? vehicle.name + " (" + driver.name + ")" : vehicle.name,
+                                totalPrice: totalPrice
+                            }
+
+                            postData.data = resultData;
+                            break;
                         default:
                             postData = {}
                     }
@@ -332,7 +362,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                 materialUsedSeed: function (data, callScope) {
                     var res = [];
                     for (var i = 0; i < data.length; i++) {
-                        if(data[i].materialRateFactTotal>0 || data[i].materialRateFact>0){
+                        if (data[i].materialRateFactTotal > 0 || data[i].materialRateFact > 0) {
                             res.push({
                                 'seed': data[i].material ? $filter('translate')(data[i].material.name) : '',
                                 'culture': data[i].material ? $filter('translate')(data[i].material.cultureName) : '',
@@ -354,7 +384,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                 materialUsedFertPlant: function (data, callScope) {
                     var res = [];
                     for (var i = 0; i < data.length; i++) {
-                        if(data[i].materialRateFactTotal>0 || data[i].materialRateFact>0){
+                        if (data[i].materialRateFactTotal > 0 || data[i].materialRateFact > 0) {
                             res.push({
                                 'materialName': data[i].material ? $filter('translate')(data[i].material.name) : '',
                                 'geozoneName': data[i].geozone ? data[i].geozone.name : '',
@@ -1048,11 +1078,14 @@ angular.module('agro.utils.xls', ['ngResource'])
                             record.waybillTotal[0]['16'] += item.fuel_used_moving;
                             record.waybillTotal[0]['17'] += item.processed_count;
                         });
-                        record.waybillTotal[0]['3'] = $filter('secondsToDateTime')(record.waybillTotal[0]['3'])
-                        record.waybillTotal[0]['4'] = $filter('secondsToDateTime')(record.waybillTotal[0]['4'])
-                        record.waybillTotal[0]['5'] = $filter('secondsToDateTime')(record.waybillTotal[0]['5'])
-                        record.waybillTotal[0]['6'] = $filter('secondsToDateTime')(record.waybillTotal[0]['6'])
-                        record.waybillTotal[0]['7'] = $filter('secondsToDateTime')(record.waybillTotal[0]['7'])
+                        if (record.waybillList.length > 0) {
+                            console.log(record.waybillTotal[0])
+                            record.waybillTotal[0]['3'] = $filter('secondsToDateTime')(record.waybillTotal[0]['3'])
+                            record.waybillTotal[0]['4'] = $filter('secondsToDateTime')(record.waybillTotal[0]['4'])
+                            record.waybillTotal[0]['5'] = $filter('secondsToDateTime')(record.waybillTotal[0]['5'])
+                            record.waybillTotal[0]['6'] = $filter('secondsToDateTime')(record.waybillTotal[0]['6'])
+                            record.waybillTotal[0]['7'] = $filter('secondsToDateTime')(record.waybillTotal[0]['7'])
+                        }
                         //total
                         if (record.waybillList.length > 0) {
                             record['waybillTranslate'] = [{
@@ -1886,6 +1919,61 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
 
                     return rep.repData;
+                }, materialWaybill: function (serverData, callScope) {
+                    let rep = $.extend(true, [], serverData.materialWaybill);
+                    let newMaterialsArray = [];
+                    for (let i = 0; i < rep.storageStoreSeedMovingList.length; i++) {
+                        let item = rep.storageStoreSeedMovingList[i];
+                        let newObject = {};
+                        newObject['number'] = newMaterialsArray.length + 1;
+                        newObject['materialName'] = $filter('translate')(item['seed']['name']) + "(" + $filter('translate')(item['seed']['cultureName']) + ")";
+                        newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
+                        newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
+                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
+                        newObject['price'] = item['price'];
+                        newMaterialsArray.push(newObject);
+                    }
+
+                    for (let i = 0; i < rep.storageStoreFertilizerMovingList.length; i++) {
+                        let item = rep.storageStoreFertilizerMovingList[i];
+                        let newObject = {};
+                        newObject['number'] = newMaterialsArray.length + 1;
+                        newObject['materialName'] = $filter('translate')(item['fertilizer']['name']);
+                        newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
+                        newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
+                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
+                        newObject['price'] = item['price'];
+                        newMaterialsArray.push(newObject);
+                    }
+
+                    for (let i = 0; i < rep.storageStorePlantProtectorMovingList.length; i++) {
+                        let item = rep.storageStorePlantProtectorMovingList[i];
+                        let newObject = {};
+                        newObject['number'] = newMaterialsArray.length + 1;
+                        newObject['materialName'] = $filter('translate')(item['plantProtector']['name']);
+                        newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
+                        newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
+                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
+                        newObject['price'] = item['price'];
+                        newMaterialsArray.push(newObject);
+
+                    }
+
+                    if (newMaterialsArray.length < 14) {
+                        let length = 14 - newMaterialsArray.length;
+                        for (let i = 0; i < length; i++) {
+                            newMaterialsArray.push({
+                                number: '',
+                                materialName: '',
+                                materialUnit: '',
+                                quantity: '',
+                                priceUnit: '',
+                                price: ''
+                            })
+                        }
+                    }
+
+                    return newMaterialsArray;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;
