@@ -294,8 +294,7 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                             let totalPrice = 0;
                             for (let i = 0; i < resultData.length; i++) {
-                                console.log(parseFloat(resultData[i].price))
-                                totalPrice += resultData[i].price ? parseFloat(resultData[i].price) : 0;
+                                totalPrice += resultData[i].intPrice ? parseFloat(resultData[i].intPrice) : 0;
                             }
 
                             let {
@@ -309,12 +308,12 @@ angular.module('agro.utils.xls', ['ngResource'])
                             } = data.params.materialWaybill;
 
                             postData.params = {
-                                number: number,
+                                number: number ? number : '',
                                 date: $filter('date')(date, 'dd.MM.yyyy'),
                                 storeFrom: storageStore.name + " (" + storeKeeper.name + ")",
                                 storeTo: storageStoreTo.name,
                                 byVehicle: driver ? vehicle.name + " (" + driver.name + ")" : vehicle.name,
-                                totalPrice: totalPrice
+                                totalPrice: $filter('number')(totalPrice, 2)
                             }
 
                             postData.data = resultData;
@@ -1929,8 +1928,9 @@ angular.module('agro.utils.xls', ['ngResource'])
                         newObject['materialName'] = $filter('translate')(item['seed']['name']) + "(" + $filter('translate')(item['seed']['cultureName']) + ")";
                         newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
                         newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
-                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
-                        newObject['price'] = item['price'];
+                        newObject['priceUnit'] = item['priceUnit'] ? $filter('number')(item['priceUnit'], 2) : '';
+                        newObject['price'] = item['price'] > 0 ? $filter('number')(item['price'], 2) : '';
+                        newObject['intPrice'] = item['price'] > 0 ? item['price'] : '';
                         newMaterialsArray.push(newObject);
                     }
 
@@ -1941,8 +1941,9 @@ angular.module('agro.utils.xls', ['ngResource'])
                         newObject['materialName'] = $filter('translate')(item['fertilizer']['name']);
                         newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
                         newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
-                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
-                        newObject['price'] = item['price'];
+                        newObject['priceUnit'] = item['priceUnit'] ? $filter('number')(item['priceUnit'], 2) : '';
+                        newObject['price'] = item['price'] > 0 ? $filter('number')(item['price'], 2) : '';
+                        newObject['intPrice'] = item['price'] > 0 ? item['price'] : '';
                         newMaterialsArray.push(newObject);
                     }
 
@@ -1953,14 +1954,15 @@ angular.module('agro.utils.xls', ['ngResource'])
                         newObject['materialName'] = $filter('translate')(item['plantProtector']['name']);
                         newObject['materialUnit'] = callScope.getUnitName(item['materialUnit']);
                         newObject['quantity'] = item['quantity'] ? item['quantity'] : '';
-                        newObject['priceUnit'] = item['priceUnit'] ? item['priceUnit'] : '';
-                        newObject['price'] = item['price'];
+                        newObject['priceUnit'] = item['priceUnit'] ? $filter('number')(item['priceUnit'], 2) : '';
+                        newObject['price'] = item['price'] > 0 ? $filter('number')(item['price'], 2) : '';
+                        newObject['intPrice'] = item['price'] > 0 ? item['price'] : '';
                         newMaterialsArray.push(newObject);
 
                     }
 
-                    if (newMaterialsArray.length < 14) {
-                        let length = 14 - newMaterialsArray.length;
+                    if (newMaterialsArray.length < 11) {
+                        let length = 11 - newMaterialsArray.length;
                         for (let i = 0; i < length; i++) {
                             newMaterialsArray.push({
                                 number: '',
