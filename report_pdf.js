@@ -131,6 +131,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 vehicleTask(rep)
             } else if (type == 'landBankGeozoneDetail') {
                 landBankGeozoneDetail(rep, params)
+            } else if (type == 'fuelAnalytic') {
+                fuelAnalytic(rep, params)
             } else {
                 console.log("Not Found " + type)
             }
@@ -10131,7 +10133,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {'text': $filter('number')(detail.max_speed, 0), style: 'td'},
                     {'text': $filter('date')(detail.time_start * 1000, 'HH:mm'), style: 'td'},
                     {'text': $filter('date')(detail.time_end * 1000, 'HH:mm'), style: 'td'},
-                    {'text': $filter('secondsToDateTime2')(detail.time_end-detail.time_start), style: 'td'},
+                    {'text': $filter('secondsToDateTime2')(detail.time_end - detail.time_start), style: 'td'},
                 ]);
 
 
@@ -14820,6 +14822,159 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 cratePdf(content);
             }
         }
+
+        function sortForFuelAnalytic(a, b) {
+            var workTypeSort = parseInt($filter('translate')(a.workType ? a.workType.name : '').localeCompare($filter('translate')(b.workType ? b.workType.name : '')));
+            var vehicleSort = parseInt((a.vehicle.name).localeCompare(b.vehicle.name));
+            if(workTypeSort!==0){
+                return workTypeSort;
+            }
+            return vehicleSort;
+        }
+
+        //аналитика по топливу
+        function fuelAnalytic(data, params, func) {
+            let rep = $.extend(true, [], data);
+            var table1_body = [];
+            var content_detail = [];
+
+            rep.repData.sort((a, b) => {
+                return sortForFuelAnalytic(a, b)
+            })
+
+
+            table1_body.push([
+                {'text': $filter('translate')('vehicle'), style: 'tableHeader'},
+                {'text': $filter('translate')('worktypes'), style: 'tableHeader'},
+                {'text': $filter('translate')('trailers'), style: 'tableHeader'},
+                {'text': $filter('translate')('crossing'), style: 'tableHeader'},
+                {'text': $filter('translate')('fuel.used.moving1'), style: 'tableHeader'},
+                {'text': $filter('translate')('fuel.avg'), style: 'tableHeader'},
+                {'text': $filter('translate')('processed'), style: 'tableHeader'},
+                {'text': $filter('translate')('fuel.used.processed'), style: 'tableHeader'},
+                {'text': $filter('translate')('fuel.used.processed.avg'), style: 'tableHeader'},
+                {'text': $filter('translate')('fuel.rate'), style: 'tableHeader'},
+            ])
+
+            for (var i = 0; i < rep.repData.length; i++) {
+                var item = rep.repData[i];
+                let trailers = '';
+                for (var t = 0; t < item.trailerList.length; t++) {
+                    trailers = trailers + " " + item.trailerList[t].name + "\n";
+                }
+
+                let prices = '';
+                for (var p = 0; p < item.referencePriceList.length; p++) {
+                    prices = prices + " " + $filter('number')(item.referencePriceList[p].fuelRate, 2) +
+                        params.scope.getTypeName(item.referencePriceList[p].fuelRateType, params.scope.fuelRateTypeList);
+                }
+                table1_body.push([
+                    {'text': item.vehicle.name, style: 'td'},
+                    {'text': $filter('translate')(item.workType ? item.workType.name : ''), style: 'td'},
+                    {'text': trailers, style: 'tdLeft'},
+                    {'text': $filter('number')(item.distance_moving, 1), style: 'td'},
+                    {'text': $filter('number')(item.fuel_used_moving, 1), style: 'td'},
+                    {'text': $filter('number')(item.fuel_used_moving_avg, 1), style: 'td'},
+                    {'text': $filter('number')(item.processed, 1), style: 'td'},
+                    {'text': $filter('number')(item.fuel_used_processed, 1), style: 'td'},
+                    {'text': $filter('number')(item.fuel_used_processed_avg, 1), style: 'td'},
+                    {'text': prices, style: 'td'},
+                ]);
+            }
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('reportType') + ' ' + $filter('lowercase')($filter('translate')('report.fuel.analytic')),
+                    alignment: 'center',
+                    bold: 'true',
+                },
+                {
+                    'text': $filter('date')(rep.date_start * 1000, 'dd.MM.yyyy') + " - " + $filter('date')(rep.date_end * 1000, 'dd.MM.yyyy'),
+                    alignment: 'center',
+                    bold: 'true',
+                    margin: [0, 0, 0, 20],
+                },
+                {
+                    color: '#444',
+                    margin: [0, 0, 0, 20],
+                    table: {
+                        widths: [75, 52, 60, 35, 45, 40, 50, 50, 45, 35],
+                        heights: 20,
+                        body: table1_body,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                }
+            )
+
+            var content = {
+                info: {
+                    title: 'Agrocontrol',
+                    author: 'Agrocontrol',
+                    subject: '',
+                    keywords: '',
+                },
+                footer: {
+                    columns: [
+                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, 0, 20, 5]}
+                    ]
+                },
+                pageMargins: [10, 10, 20, 20],
+                extend: 'pdfHtml5',
+                pageSize: 'A4',
+                content: [
+                    content_detail
+                ],
+                styles: {
+                    tableHeader: {
+                        alignment: 'center',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    tableHeaderLeft: {
+                        alignment: 'left',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    td: {
+                        alignment: 'center',
+                        height: '100',
+                        fontSize: 8
+                    },
+                    tdLeft: {
+                        alignment: 'left',
+                        height: '100',
+                        fontSize: 8
+                    },
+                    header: {
+                        fontSize: 9,
+                        bold: 'true',
+                        color: 'black',
+                        alignment: 'center'
+                    },
+                    redTd: {
+                        alignment: 'center',
+                        color: 'black',
+                        fontSize: 8,
+                        fillColor: '#F2DEDE',
+                    }
+                }
+            };
+
+            if (func) {
+                const pdfDocGenerator = pdfMake.createPdf(content);
+                pdfDocGenerator.getBase64((data) => {
+                    func.call(this, data);
+                });
+            } else {
+                cratePdf(content);
+            }
+        }
+
 
         function cratePdf(data) {
             pdfMake.tableLayouts = {

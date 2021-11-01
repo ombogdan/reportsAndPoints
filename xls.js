@@ -304,19 +304,33 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 storeKeeper,
                                 storageStoreTo,
                                 vehicle,
-                                driver
+                                driver,
+                                comment
                             } = data.params.materialWaybill;
 
                             postData.params = {
                                 number: number ? number : '',
                                 date: $filter('date')(date, 'dd.MM.yyyy'),
                                 storeFrom: storageStore.name + " (" + storeKeeper.name + ")",
-                                storeTo: storageStoreTo.name,
+                                storeTo: storageStoreTo.name + (comment ? ' - ' + comment : ''),
                                 byVehicle: driver ? vehicle.name + " (" + driver.name + ")" : vehicle.name,
                                 totalPrice: $filter('number')(totalPrice, 2)
                             }
 
                             postData.data = resultData;
+                            break;
+                        case "materialLeft":
+                            postData.data = this.materialLeft(data.data, callScope);
+
+                            postData.params = {}
+                            break;
+                        case "fuelAnalytic":
+                            postData.data = this.fuelAnalytic(data.data, callScope);
+
+                            postData.params = {
+                                date_start: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            }
                             break;
                         default:
                             postData = {}
@@ -367,12 +381,14 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 'culture': data[i].material ? $filter('translate')(data[i].material.cultureName) : '',
                                 'geozoneName': data[i].geozone ? data[i].geozone.name : '',
                                 'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
-                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : '',
+                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : data[i].fact_processed || '',
                                 'unitName': callScope.getUnitName(data[i].materialUnit),
                                 'byHaPlan': '',
                                 'totalPlan': '',
                                 'byHaFact': data[i].materialRateFact,
-                                'totalFact': data[i].materialRateFactTotal
+                                'totalFact': data[i].materialRateFactTotal,
+                                'price': data[i].materialUnitPrice ? data[i].materialUnitPrice : '',
+                                'priceSum': data[i].materialUnitPrice ? (parseFloat(data[i].materialUnitPrice) * parseFloat(data[i].materialRateFactTotal)) : '',
                             });
                         }
                     }
@@ -388,7 +404,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 'materialName': data[i].material ? $filter('translate')(data[i].material.name) : '',
                                 'geozoneName': data[i].geozone ? data[i].geozone.name : '',
                                 'geozoneGroupName': data[i].agrooperation && data[i].agrooperation.geozone ? data[i].agrooperation.geozone.geozone_group_name : '',
-                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : '',
+                                'factSquare': data[i].agrooperation ? data[i].agrooperation.fact_square : data[i].fact_processed || '',
                                 'unitName': callScope.getUnitName(data[i].materialUnit),
                                 'byHaPlan': '',
                                 'totalPlan': '',
@@ -434,7 +450,7 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                         for (var q = 0; q < report.agroworkDetail.length; q++) {
                             var reportDetail = report.agroworkDetail[q];
-                            reportDetail['worktype_name'] = $filter('translate')(reportDetail.trailer ? reportDetail.trailer.worktype.name : '');
+                            reportDetail['worktype_name'] = $filter('translate')(report.workType ? report.workType.name : '');
                             reportDetail['parking_exel'] = reportDetail.parking_num + "(" + $filter('secondsToDateTime')(reportDetail.parking_time) + ")";
                             reportDetail['stop_exel'] = reportDetail.stop_num + "(" + $filter('secondsToDateTime')(reportDetail.stop_time) + ")";
                             reportDetail['time_in_exel'] = $filter('date')(reportDetail.time_in, 'dd.MM.yyyy HH:mm:ss');
@@ -466,6 +482,17 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                         }
                     }
+
+                    data.agroworkList.sort(function (a, b) {
+                        if ($filter('lowercase')($filter('translate')(a.vehicle.name)) < $filter('lowercase')($filter('translate')(b.vehicle.name))) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')($filter('translate')(a.vehicle.name)) > $filter('lowercase')($filter('translate')(b.vehicle.name))) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
 
                     return data.agroworkList;
                 },
@@ -1958,7 +1985,6 @@ angular.module('agro.utils.xls', ['ngResource'])
                         newObject['price'] = item['price'] > 0 ? $filter('number')(item['price'], 2) : '';
                         newObject['intPrice'] = item['price'] > 0 ? item['price'] : '';
                         newMaterialsArray.push(newObject);
-
                     }
 
                     if (newMaterialsArray.length < 11) {
@@ -1976,6 +2002,55 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
 
                     return newMaterialsArray;
+                },
+                materialLeft: function (serverData, callScope) {
+                    let rep = $.extend(true, [], serverData);
+                    let newArray = [];
+                    for (let i = 0; i < rep.length; i++) {
+                        let item = rep[i];
+                        let newRecord = {};
+                        newRecord['storeName'] = item['storageStore'] ? item['storageStore']['name'] : '';
+                        newRecord['materialName'] = $filter('translate')(item['material_name']);
+                        newRecord['balance'] = item['balance'];
+                        newRecord['unit'] = callScope.getLeftUnit(item['materialUnit']);
+                        newRecord['priceAvg'] = item['unitPrice'];
+                        newRecord['priceSum'] = item['price'];
+                        newArray.push(newRecord)
+                    }
+
+                    return newArray;
+                },
+                fuelAnalytic: function (serverData, callScope) {
+                    let rep = $.extend(true, [], serverData);
+                    let newArray = [];
+                    rep.repData.sort((a, b) => {
+                        var workTypeSort = parseInt($filter('translate')(a.workType ? a.workType.name : '').localeCompare($filter('translate')(b.workType ? b.workType.name : '')));
+                        var vehicleSort = parseInt((a.vehicle.name).localeCompare(b.vehicle.name));
+                        if (workTypeSort !== 0) {
+                            return workTypeSort;
+                        }
+                        return vehicleSort;
+                    });
+
+                    for (let i = 0; i < rep.repData.length; i++) {
+                        let item = rep.repData[i];
+                        let trailers = '';
+                        for (var t = 0; t < item.trailerList.length; t++) {
+                            trailers = trailers + " " + item.trailerList[t].name + "\n";
+                        }
+
+                        let prices = '';
+                        for (var p = 0; p < item.referencePriceList.length; p++) {
+                            prices = prices + " " + $filter('number')(item.referencePriceList[p].fuelRate, 2) +
+                                callScope.getTypeName(item.referencePriceList[p].fuelRateType, callScope.fuelRateTypeList);
+                        }
+                        item['workTypeExel'] = $filter('translate')(item.workType ? item.workType.name : '')
+                        item['prices'] = prices;
+                        item['trailers'] = trailers;
+                        newArray.push(item)
+                    }
+
+                    return newArray;
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;

@@ -11,7 +11,7 @@ const host = 'demo.agrocontrol.net';
 var idx = 0;
 var loginned = false;
 
-var pointList = fs.readFileSync('points_test.txt', 'utf8').split('\n');
+var pointList = fs.readFileSync('points_test_3.txt', 'utf8').split('\n');
 console.log(pointList,pointList.length);
 // Create a new TCP client.
 const client = new Net.Socket();
@@ -50,7 +50,7 @@ client.on('data', function(chunk) {
         client.end();
     }
 
-    setTimeout(sendMessage, 2000);
+    setTimeout(sendMessage, 20000);
 
     // Request an end to the connection after the data has been received.
     //client.end();
