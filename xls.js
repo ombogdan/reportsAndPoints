@@ -332,6 +332,14 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 date_end: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
                             }
                             break;
+                        case "landBankDashboardDetail":
+                            let result = this.landBankDashboardDetail(data, callScope);
+                            postData.data = result.data;
+                            postData.params = {
+                                total: result.total,
+                                title: data.params.shareDetailTitle
+                            }
+                            break;
                         default:
                             postData = {}
                     }
@@ -2051,6 +2059,81 @@ angular.module('agro.utils.xls', ['ngResource'])
                     }
 
                     return newArray;
+                },
+                landBankDashboardDetail: function (data, callScope) {
+                    let serverData = $.extend(true, [], data.data);
+                    let sortColumn = data.params.sortColumn;
+                    if (sortColumn.reverse === false) {
+                        serverData.sort(function (a, b) {
+                            var aa = eval("a." + (sortColumn.column))
+                            var bb = eval("b." + (sortColumn.column))
+                            if (aa == null) {
+                                return 1;
+                            } else if (bb == null) {
+                                return -1;
+                            }
+                            if (aa < bb) {
+                                return -1;
+                            }
+                            if (aa > bb) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    } else {
+                        serverData.sort(function (a, b) {
+                            var aa = eval("a." + (sortColumn.column))
+                            var bb = eval("b." + (sortColumn.column))
+                            if (aa == null) {
+                                return -1;
+                            } else if (bb == null) {
+                                return 1;
+                            }
+                            if (aa < bb) {
+                                return 1;
+                            }
+                            if (aa > bb) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    }
+
+                    let newArray = [];
+                    for (let z = 0; z < serverData.length; z++) {
+                        let share = serverData[z];
+                        let right1_fio = ""
+                        for (let z = 0; z < share.right1FioList.length; z++) {
+                            right1_fio = right1_fio + "  " + share.right1FioList[z] ? (share.right1FioList[z] === null ? "" : share.right1FioList[z]) : '';
+                        }
+
+                        let kadastr_number = share.kadastr_number
+
+                        for (let h = 0; h < share.bankShareExchangeList.length; h++) {
+                            let record = share.bankShareExchangeList[h]
+                            kadastr_number += "   " + record.kadastr_number + " (" + $filter('number')(record.bankShareToSquare, 4) + ")";
+                        }
+                        let right2_fio = ''
+                        if (share.bankTenant) {
+                            right2_fio = share.bankTenant.name;
+                        } else if (share.right2_fio) {
+                            right2_fio = share.right2_fio;
+                        }
+                        share['right1_fio'] = right1_fio;
+                        share['right2_fio'] = right2_fio;
+                        share['kadastr_number'] = kadastr_number;
+                        share['shareSquareExel'] = callScope.getShareSquare(share);
+                        share['contractDateToExel'] = share.contract_date_to ? $filter('date')(share.contract_date_to, 'dd.MM.yyyy') : ''
+                        share['contractSupplementaryDateToExel'] = share.contract_supplementary_date_to ? $filter('date')(share.contract_supplementary_date_to, 'dd.MM.yyyy') : ''
+                        share['contractStatusExel'] = callScope.getContractStatus(share)
+                        newArray.push(share);
+                    }
+
+                    let total = $filter('number')(callScope.countShareSquare(serverData, callScope.shareDetailFilter, {}) + callScope.countRoadSquare(callScope.bankGeozoneRoadList, callScope.shareDetailFilter, true), 4);
+                    return {
+                        data: newArray,
+                        total: total
+                    };
                 },
                 sendRequest: function (postData, filename) {
                     var self = this;

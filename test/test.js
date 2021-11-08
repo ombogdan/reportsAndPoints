@@ -23,7 +23,7 @@ client.connect({ port: port, host: host }, function() {
     // 351513052296107  ford іващенко
     // 13226009700069  piven  txt
 
-    var data = '862430052269384'+';NA;';
+    var data = '309B'+';NA;';
     // var data = '123456789011'+';NA;';
     var crc = calc_crc16(data);
 
@@ -67,7 +67,7 @@ function sendMessage(){
     var dd = dt.getDate();
     var date = (dd>9 ? '' : '0') + dd + (mm>9 ? '' : '0') + mm+dt.getFullYear();
 //console.log("date="+date);
-    var hour = dt.getHours()-3;
+    var hour = dt.getHours()-2;
     var min = dt.getMinutes();
     var sec = dt.getSeconds();
     var time = (hour>9 ? '' : '0') + hour+(min>9 ? '' : '0') + min+(sec>9 ? '' : '0') + sec;
