@@ -23,7 +23,7 @@ client.connect({ port: port, host: host }, function() {
     // 351513052296107  ford іващенко
     // 13226009700069  piven  txt
 
-    var data = '309B'+';NA;';
+    var data = '860157042840170'+';NA;';
     // var data = '123456789011'+';NA;';
     var crc = calc_crc16(data);
 
@@ -50,7 +50,7 @@ client.on('data', function(chunk) {
         client.end();
     }
 
-    setTimeout(sendMessage, 2000);
+    setTimeout(sendMessage, 3000);
 
     // Request an end to the connection after the data has been received.
     //client.end();
@@ -76,7 +76,6 @@ function sendMessage(){
     //var gps = DecimalToNMEAConverter(49.439556958940855,32.0496940612793);
 
     command = "#D#";
-//	data = date+";"+time+";"+lat1+";"+lat2+";"+lon1+";"+lon2+";"+speed+";"+course+";"+height+";"+sats+";"+hdop+";"+inputs+";"+outputs+";"+adc+";"+ibutton+";"+params+";";
     var row = pointList[idx];
     if (!row){return;}
     row = row.replace('\r','').replace('\n','');

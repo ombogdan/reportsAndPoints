@@ -77,6 +77,12 @@ angular.module('agro.utils.xls', ['ngResource'])
 
                         case "agrooperationWorkType":
                             postData.data = this.agrooperationWorkType(data.data, callScope);
+                            let header = {};
+                            if(data.data.repData.length>0){
+                                (data.data.repData[0].detailList).map((item, index)=>{
+                                    header[index+1] = item.vehicle ? item.vehicle.name : '';
+                                });
+                            }
 
                             postData.params = {
                                 reportType: $filter('translate')('report.agrooperation.workType'),
@@ -88,6 +94,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 cluster_name: data.data.cluster_name,
                                 culture_name: $filter('translate')(data.data.culture_name),
                                 working_total: data.data.working_total,
+                                header: header,
                                 translate: {
                                     square_by_cropRotation: $filter('translate')('square.by.cropRotation')
                                 }
@@ -168,10 +175,13 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "landBankGeozoneDetail":
                             let resultObject = this.landBankGeozoneDetail(data, callScope);
                             postData.data = resultObject.data;
+                            console.log(data.data)
+
                             postData.params = {
                                 total: resultObject.total,
                                 technologicalLossesSquare: $filter('number')(data.params.technologicalLossesSquare, 2),
-                                selfCaptureSquare: $filter('number')(data.params.selfCaptureSquare, 2)
+                                selfCaptureSquare: $filter('number')(data.params.selfCaptureSquare, 2),
+                                geozone_name: callScope.shareDetailTitle
                             }
                             break;
                         case "farmByDevice":
@@ -240,7 +250,7 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "unloadingByField":
                             postData.data = this.unloadingByField(data.data, callScope);
                             postData.params = {
-                                date_rep: $filter('date')(data.data.date_rep * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_rep: $filter('date')(data.data.oper_day, 'dd.MM.yyyy'),
                             }
                             break;
                         case "byOverloader":
@@ -335,15 +345,148 @@ angular.module('agro.utils.xls', ['ngResource'])
                         case "landBankDashboardDetail":
                             let result = this.landBankDashboardDetail(data, callScope);
                             postData.data = result.data;
+
                             postData.params = {
                                 total: result.total,
                                 title: data.params.shareDetailTitle
                             }
                             break;
+                        case "byField":
+                            postData.data = this.byField(data, callScope);
+                            let rep = data.data
+                            var cultures = "";
+                            for (var z = 0; z < rep.cultureList.length; z++) {
+                                var culture = rep.cultureList[z]
+                                cultures += $filter('translate')(culture.name) + " ";
+                            }
+
+                            postData.params = {
+                                cultures: cultures,
+                                geozone_name: rep.geozone_name,
+                                square: rep.square,
+                                perimetr: rep.perimetr,
+                                processed: (rep.square - rep.notprocessed),
+                                notprocessed: (rep.square - rep.notprocessed),
+                                fieldName: rep.geozone_name,
+                                date_start_exel: $filter('date')(rep.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(rep.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            }
+                            break;
+                        case "byVehicleNew":
+                            postData.data = this.byVehicleNew(data, callScope);
+                            postData.params = {
+                                vehicle_name: data.data.vehicle_name,
+                                distance: $filter('number')(data.data.distance, 2),
+                                distance_exel: $filter('number')(data.data.distance - data.data.distance_out_field, 2),
+                                distance_out_field: $filter('number')(data.data.distance_out_field, 2),
+                                processed_exel: $filter('number')(callScope.getFloatTotal(data.data.reportDetailList, 'processed'), 2),
+                                speed_avg: data.data.speed_avg,
+                                speed_max: data.data.speed_max,
+                                stop_num_exel: $filter('translate')(data.data.stop_num + "(" + $filter('translate')($filter('secondsToDateTime')(data.data.stop_time))),
+                                parking_num_exel: $filter('translate')(data.data.parking_num + "(" + $filter('translate')($filter('secondsToDateTime')(data.data.parking_time))),
+                                ignition_working_time: $filter('translate')($filter('secondsToDateTime')(data.data.ignition_working_time)),
+                                fuel_used: $filter('number')(data.data.fuel_used, 2),
+                                petrol_refueling: $filter('number')(data.data.petrol_refueling, 2),
+                                date_start_exel: $filter('date')(data.data.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            }
+                            break;
+                        case "byVehicleCar":
+                            postData.data = this.byVehicleCar(data, callScope);
+                            postData.params = {
+                                fuel_used: data.data.distance,
+                                distance: data.data.distance,
+                                vehicle_name: data.data.vehicle_name,
+                                date_start_exel: $filter('date')(data.data.time_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(data.data.time_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            }
+                            break;
+                        case "byFuelDetail":
+                            postData.data = this.byFuelDetail(data, callScope);
+                            let repByFuelDetail = data.data;
+                            postData.params = {
+                                date_start_exel: $filter('date')(repByFuelDetail.time_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(repByFuelDetail.time_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                distance: repByFuelDetail.distance,
+                                going_time_exel: $filter('translate')($filter('secondsToDateTime')(repByFuelDetail.going_time)),
+                                stop_with_engine: $filter('translate')($filter('secondsToDateTime')((repByFuelDetail.ignition_working_time - repByFuelDetail.going_time))),
+                                parking_time_exel: $filter('translate')($filter('secondsToDateTime')(repByFuelDetail.parking_time)),
+                                ignition_working_time_exel: $filter('translate')($filter('secondsToDateTime')(repByFuelDetail.ignition_working_time)),
+                                start_litr: $filter('number')(repByFuelDetail.start_litr, 2),
+                                end_litr: $filter('number')(repByFuelDetail.end_litr, 2),
+                                refueling: repByFuelDetail.refueling,
+                                petrol_refueling: repByFuelDetail.petrol_refueling,
+                                fuel_drain: repByFuelDetail.fuel_drain,
+                                fuel_used: repByFuelDetail.fuel_used,
+                                vehicle_name: repByFuelDetail.vehicle_name,
+                            }
+                            break;
+                        case "byVehicleGroup":
+                            postData.data = this.byVehicleGroup(data, callScope);
+                            let repByVehicleGroup = data.data;
+                            postData.params = {
+                                date_start_exel: $filter('date')(repByVehicleGroup.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(repByVehicleGroup.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                group_name: repByVehicleGroup.group_name,
+                                geozone_speed: repByVehicleGroup.geozone_speed,
+                                distanceSpeedGeather: $filter('translate')('distance.speed.geather', {'speed': " " + repByVehicleGroup.geozone_speed}),
+                                distanceSpeedLess: $filter('translate')('distance.speed.less', {'speed': " " + repByVehicleGroup.geozone_speed}),
+                            }
+                            break;
+                        case "byRoute":
+                            postData.data = this.byRoute(data, callScope);
+                            let repByRoute = data.data;
+                            postData.params = {
+                                date_start_exel: $filter('date')(repByRoute.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(repByRoute.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                routeName: repByRoute.route_name,
+                            }
+                            break;
+                        case "cropRotation":
+                            postData.data = this.сropRotation(data, callScope);
+                            let yearObject = {};
+                            for (let i = 0; i < data.params.yearList.length; i++) {
+                                yearObject[i] = data.params.yearList[i]
+                            }
+
+                            postData.params = {
+                                yearObject: yearObject,
+                            }
+                            break;
+                        case "vehicleTaskAgronom":
+                            postData.data = this.vehicleTaskAgronom(data, callScope);
+                            postData.params = {
+                                oper_day: $filter('date')(data.data.oper_day, 'dd.MM.yyyy'),
+                            }
+                            break;
+                        case "vehicleTaskBySource":
+                            postData.data = this.vehicleTaskBySource(data, callScope);
+                            postData.params = {
+                                oper_day: $filter('date')(data.data.oper_day, 'dd.MM.yyyy'),
+                                plan_square: $filter('number')(callScope.getTotalByField('plan_square', data.data), 2),
+                                plan_fuel_used: $filter('number')(callScope.getTotalByField('plan_fuel_used', data.data), 2),
+                                fact_square: $filter('number')(callScope.getTotalByField('fact_square', data.data), 2),
+                                fact_fuel_used: $filter('number')(callScope.getTotalByField('fact_fuel_used', data.data), 2),
+                            }
+                            break;
+                        case "timesheetReportDetail":
+                            postData.data = this.timesheetReportDetail(data.data, callScope);
+                            postData.params = {
+                                reportDate: data.params.month.name + " " + data.params.year,
+                            }
+                            break;
+                        case "grainToFarmConsolidatedCar":
+                            postData.data = this.grainToFarmConsolidatedCar(data, callScope);
+                            let grainToFarmConsolidatedCar = data.data;
+                            postData.params = {
+                                date_start_exel: $filter('date')(grainToFarmConsolidatedCar.date_start * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                date_end_exel: $filter('date')(grainToFarmConsolidatedCar.date_end * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                                farm_name: grainToFarmConsolidatedCar.farm_name
+                            }
+                            break;
                         default:
                             postData = {}
                     }
-                    // console.log(postData)
                     // console.log(JSON.stringify(postData))
                     this.sendRequest(postData);
                 },
@@ -374,6 +517,10 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 report['time_in_exel'] = $filter('date')(report['time_in'], 'dd.MM.yyyy HH:mm:ss')
                                 report['time_out_exel'] = $filter('date')(report['time_out'], 'dd.MM.yyyy HH:mm:ss')
                                 report['percent'] = (report.agrooperation.fact_square / report.agrooperation.plan_square) * 100;
+                                report['workByAgronom'] = report.agrooperation.is_confirmation ?
+                                    (report.agrooperation.agrooperationFactSquareAgronomType === "Full" ?
+                                        $filter('translate')('geozone.processed.type.full') : $filter('translate')('geozone.processed.type.part') + ": " + $filter('number')(report.agrooperation.factSquareByAgronom, 2)) :
+                                    (report.agrooperation.factSquareByAgronom ? $filter('number')(report.agrooperation.factSquareByAgronom, 2) : '')
                             }
                         }
                     }
@@ -548,12 +695,20 @@ angular.module('agro.utils.xls', ['ngResource'])
                     });
                     for (var l = 0; l < data.repData.length; l++) {
                         let item = data.repData[l];
+
                         if (item.total !== 0) {
                             item['total'] = item.total;
                         } else {
                             item['total'] = '';
                         }
                         item['cropRotation_exel'] = item.cropRotation_square - item.total;
+                        let vehicle = {};
+                        if(item.detailList.length>0){
+                            (item.detailList).map((item, index)=>{
+                                vehicle[index+1] = item;
+                            });
+                        }
+                        item.vehicle = vehicle
                     }
                     return data.repData;
                 },
@@ -1113,7 +1268,6 @@ angular.module('agro.utils.xls', ['ngResource'])
                             record.waybillTotal[0]['17'] += item.processed_count;
                         });
                         if (record.waybillList.length > 0) {
-                            console.log(record.waybillTotal[0])
                             record.waybillTotal[0]['3'] = $filter('secondsToDateTime')(record.waybillTotal[0]['3'])
                             record.waybillTotal[0]['4'] = $filter('secondsToDateTime')(record.waybillTotal[0]['4'])
                             record.waybillTotal[0]['5'] = $filter('secondsToDateTime')(record.waybillTotal[0]['5'])
@@ -1512,27 +1666,38 @@ angular.module('agro.utils.xls', ['ngResource'])
                             }
 
                             if (detail.weightTareTrailer) {
-                                detail['weightTareTrailer'] = detail.weightTareTrailer
+                                detail['weightTareTrailer'] = detail.weightTareTrailer;
                             } else {
-                                detail['weightTareTrailer'] = ''
+                                detail['weightTareTrailer'] = '';
                             }
 
                             if (detail.tmTareTrailer) {
                                 detail['tmTareTrailer'] = $filter('date')(detail.tmTareTrailer * 1000, 'dd.MM.yyyy HH:mm:ss');
                             } else {
-                                detail['tmTareTrailer'] = ''
+                                detail['tmTareTrailer'] = '';
                             }
 
                             if (detail.humidity === null) {
-                                detail['humidity'] = ''
+                                detail['humidity'] = '';
                             }
-                            newArray.push(detail)
+                            if (detail.distance === null) {
+                                detail['distance'] = '';
+                            }
+                            detail.ttn = detail['ttn'] ? detail['ttn'] : '';
+                            detail.driver_name = detail.driver_name ? detail.driver_name : '';
+
+                            detail['geozoneList'] = detail['geozoneList'] ? detail['geozoneList'] : '',
+                                newArray.push(detail)
                         }
+                        console.log(detail['ttn'])
                         newData.push({
                             detailArr: newArray,
                             tmByExel: $filter('date')(reportDetail[0].tm * 1000, 'dd.MM.yyyy '),
                             weightNettoBy: callScope.getTotal(reportDetail, 'weightNetto'),
-                        })
+
+                        });
+                        console.log(detail)
+
                     }
                     return newData;
                 },
@@ -1749,11 +1914,9 @@ angular.module('agro.utils.xls', ['ngResource'])
                         if (a.geozone_name.substr(0, 1).toUpperCase() === 'І' || a.geozone_name.substr(0, 1).toUpperCase() === 'Є' || a.geozone_name.substr(0, 1).toUpperCase() === 'Ї') {
                             return 1;
                         }
-
                         if (b.geozone_name.substr(0, 1).toUpperCase() === 'І' || b.geozone_name.substr(0, 1).toUpperCase() === 'Є' || b.geozone_name.substr(0, 1).toUpperCase() === 'Ї') {
                             return -1;
                         }
-
                         if ($filter('lowercase')(a.geozone_name) < $filter('lowercase')(b.geozone_name)) {
                             return -1;
                         }
@@ -1762,15 +1925,16 @@ angular.module('agro.utils.xls', ['ngResource'])
                         }
                         return 0;
                     });
-
+                    const regex = /&#179;/gi;
 
                     for (var i = 0; i < rep.repDetail.length; i++) {
                         var detail = rep.repDetail[i];
+                        detail['plan_productivity'] = detail['plan_productivity'] ? detail['plan_productivity'] : '';
                         detail['culture_name_exel'] = detail.culture_name ? $filter('translate')(detail.culture_name) : '';
                         detail['seed_name_exel'] = detail.seed_name ? $filter('translate')(detail.seed_name) : '';
                         detail['date_harvest_exel'] = detail.date_harvest ? $filter('date')(detail.date_harvest, 'dd.MM.yyyy') : '';
+                        detail['delivery_unloading_exel'] = detail.oper_day_without_weight_cnt > 0 ? (detail.oper_day_without_weight_cnt + " (" + $filter('number')(detail.oper_day_without_weight_kub, 0) + $filter('translate')('m_kub').replace(regex, '³') + ")") : '';
                     }
-
                     return rep.repDetail;
                 }, byOverloader: function (data, callScope) {
                     let rep = $.extend(true, [], data);
@@ -1922,12 +2086,16 @@ angular.module('agro.utils.xls', ['ngResource'])
                     for (var i = 0; i < rep.repData.length; i++) {
                         var data = rep.repData[i]
                         var geozones = '';
-                        let tmFarmExel = ''
+                        var geozoneGroups = '';
 
                         for (var z = 0; z < data.geozoneList.length; z++) {
                             geozones += data.geozoneList[z]
                         }
+                        for (var z = 0; z < data.geozoneGroupList.length; z++) {
+                            geozoneGroups += data.geozoneGroupList[z]
+                        }
                         data['geozones_exel'] = geozones
+                        data['geozoneGroups_exel'] = geozoneGroups
 
                         if (data.tmFarm !== null) {
                             data['tmFarmExel'] = $filter('date')(data.tmFarm * 1000, 'dd.MM.yyyy HH:mm:ss');
@@ -2107,12 +2275,6 @@ angular.module('agro.utils.xls', ['ngResource'])
                             right1_fio = right1_fio + "  " + share.right1FioList[z] ? (share.right1FioList[z] === null ? "" : share.right1FioList[z]) : '';
                         }
 
-                        let kadastr_number = share.kadastr_number
-
-                        for (let h = 0; h < share.bankShareExchangeList.length; h++) {
-                            let record = share.bankShareExchangeList[h]
-                            kadastr_number += "   " + record.kadastr_number + " (" + $filter('number')(record.bankShareToSquare, 4) + ")";
-                        }
                         let right2_fio = ''
                         if (share.bankTenant) {
                             right2_fio = share.bankTenant.name;
@@ -2121,47 +2283,526 @@ angular.module('agro.utils.xls', ['ngResource'])
                         }
                         share['right1_fio'] = right1_fio;
                         share['right2_fio'] = right2_fio;
-                        share['kadastr_number'] = kadastr_number;
-                        share['shareSquareExel'] = callScope.getShareSquare(share);
+                        share['kadastr_number'] = share.kadastr_number;
+                        share['shareSquareExel'] = callScope.getShareSquare(share, null, {
+                            isGiven: callScope.activeRow == 'exchange.exchangeGiven',
+                            isReceived: callScope.activeRow == 'exchange.exchangeReceived'
+                        });
                         share['contractDateToExel'] = share.contract_date_to ? $filter('date')(share.contract_date_to, 'dd.MM.yyyy') : ''
                         share['contractSupplementaryDateToExel'] = share.contract_supplementary_date_to ? $filter('date')(share.contract_supplementary_date_to, 'dd.MM.yyyy') : ''
+                        share['right3ContractDateToExel'] = share.right3_contract_date_to ? $filter('date')(share.right3_contract_date_to, 'dd.MM.yyyy') : ''
                         share['contractStatusExel'] = callScope.getContractStatus(share)
+                        share['right3_contract_number'] = share.right3_contract_number ? share.right3_contract_number : '';
+                        share['right3_contractor_name'] = share.right3_contractor_name ? share.right3_contractor_name : '';
+                        share['right3_cluster_name'] = share.right3_cluster_name ? share.right3_cluster_name : '';
+                        share['right3_contract_date_to_exel'] = share.right3_contract_date_to ? $filter('date')(share.right3_contract_date_to, 'dd.MM.yyyy') : '';
+                        share['right3_contract_date_exel'] = share.right3_contract_date ? $filter('date')(share.right3_contract_date, 'dd.MM.yyyy') : ''
                         newArray.push(share);
                     }
 
-                    let total = $filter('number')(callScope.countShareSquare(serverData, callScope.shareDetailFilter, {}) + callScope.countRoadSquare(callScope.bankGeozoneRoadList, callScope.shareDetailFilter, true), 4);
+                    let total = $filter('number')(callScope.countShareSquare(serverData, {}, {}, {
+                        isGiven: callScope.activeRow == 'exchange.exchangeGiven',
+                        isReceived: callScope.activeRow == 'exchange.exchangeReceived'
+                    }), 4);
                     return {
                         data: newArray,
                         total: total
                     };
                 },
-                sendRequest: function (postData, filename) {
-                    var self = this;
+                byField: function (data, callScope) {
+                    let serverData = $.extend(true, {}, data.data);
+                    let newArray = [];
+                    for (var i = 0; i < serverData.vehicles.length; i++) {
+                        var vehicle = serverData.vehicles[i]
+                        var trailer = "";
+                        var driver = "";
 
-                    if (this.loadXlsDefer && this.loadXlsDefer != null) {
-                        return;
+                        if (vehicle.trailerList.length > 0) {
+                            for (var t = 0; t < vehicle.trailerList.length; t++) {
+                                var tr = vehicle.trailerList[t]
+                                trailer += $filter('translate')(tr.name) + " "
+                            }
+                        } else {
+                            trailer += "-";
+                        }
+
+                        if (vehicle.driverList.length) {
+                            for (var d = 0; d < vehicle.driverList.length; d++) {
+                                var dr = vehicle.driverList[d];
+                                driver += dr.name + " ";
+                            }
+                        } else {
+                            driver += "-";
+                        }
+
+                        for (var l = 0; l < vehicle.reportDetailList.length; l++) {
+                            var vehicleDetail = vehicle.reportDetailList[l]
+                            var trailer1 = '';
+                            var driver1 = '';
+                            if (vehicleDetail.trailer) {
+                                trailer1 += $filter('translate')(vehicleDetail.trailer.name) + " ";
+                            } else {
+                                trailer1 += "-";
+                            }
+
+                            if (vehicleDetail.driver) {
+                                driver1 += vehicleDetail.driver.name + " ";
+                            } else {
+                                driver1 += "-";
+                            }
+                            vehicleDetail['time_in_field_exel'] = $filter('date')(vehicleDetail.time_in_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            vehicleDetail['time_out_field_exel'] = $filter('date')(vehicleDetail.time_out_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                            vehicleDetail['working_time_exel'] = $filter('translate')($filter('secondsToDateTime')(vehicleDetail.working_time));
+                            vehicleDetail['ignition_working_time_exel'] = $filter('translate')($filter('secondsToDateTime')(vehicleDetail.ignition_working_time));
+                            vehicleDetail['processed_exel'] = $filter('number')(vehicleDetail.processed, 2) + " (" + $filter('number')(vehicleDetail.processed / data.square * 100, 2) + "%)";
+                            vehicleDetail['trailers'] = trailer1;
+                            vehicleDetail['drivers'] = driver1;
+                            vehicleDetail['stop_num_exel'] = vehicleDetail.stop_num + "(" + $filter('secondsToDateTime')(vehicleDetail.stop_time) + ")"
+                            vehicleDetail['parking_num_exel'] = vehicleDetail.parking_num + "(" + $filter('secondsToDateTime')(vehicleDetail.parking_time) + ")"
+                        }
+                        newArray.push({
+                            vehicle_name: vehicle.vehicle_name,
+                            time_in_field_exel: $filter('date')(vehicle.time_in_field * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            time_out_field_exel: $filter('date')(vehicle.time_out_field * 1000, 'dd.MM.yyyy HH:mm:ss'),
+                            working_time_exel: $filter('translate')($filter('secondsToDateTime')(vehicle.working_time)),
+                            ignition_working_time_exel: $filter('translate')($filter('secondsToDateTime')(vehicle.ignition_working_time)),
+                            processed_exel: $filter('number')(vehicle.processed, 2) + " (" + $filter('number')(vehicle.processed / data.square * 100, 2) + "%)",
+                            trailers: trailer,
+                            drivers: driver,
+                            stop_num_exel: vehicle.stop_num + "(" + $filter('secondsToDateTime')(vehicle.stop_time) + ")",
+                            parking_num_exel: vehicle.parking_num + "(" + $filter('secondsToDateTime')(vehicle.parking_time) + ")",
+                            speed_avg: vehicle.speed_avg,
+                            speed_max: vehicle.speed_max,
+                            fuel_used: vehicle.fuel_used,
+                            szr_used: vehicle.szr_used,
+                            reportDetailList: vehicle.reportDetailList
+                        })
+
+                    }
+                    return newArray;
+                },
+                byVehicleNew: function (data, callScope) {
+                    let serverData = $.extend(true, {}, data.data);
+
+                    for (var i = 0; i < serverData.reportDetailList.length; i++) {
+                        var reportDetail = serverData.reportDetailList[i]
+
+                        var type = '';
+                        if (reportDetail.isParking) {
+                            type += $filter('translate')('parking1') + " ";
+                        } else {
+                            type += $filter('translate')('going') + " ";
+                        }
+
+                        var trailer = "";
+                        if (reportDetail.trailer) {
+                            trailer += reportDetail.trailer.name + " ";
+                        } else {
+                            trailer += "-";
+                        }
+
+                        var driver = "";
+                        if (reportDetail.driver) {
+                            driver += reportDetail.driver.name;
+                        } else {
+                            driver += "-";
+                        }
+
+                        var unit = "";
+                        var geozone = "";
+                        if (reportDetail.geozone != null) {
+                            geozone += (reportDetail.geozone ? reportDetail.geozone.name : '') + " ";
+                            unit += $filter('translate')('ha') + " ";
+                        } else {
+                            geozone += $filter('translate')('crossing') + " ";
+                            unit += $filter('translate')('km') + " ";
+                        }
+
+                        var cultures = "";
+                        var square_real = "";
+                        var geozone_group_name = "";
+                        if (reportDetail.geozone) {
+                            if (reportDetail.geozone.cultureList.length > 0) {
+                                for (var k = 0; k < reportDetail.geozone.cultureList.length; k++) {
+                                    var culture = reportDetail.geozone.cultureList[k];
+                                    cultures += $filter('translate')(culture.name) + " ";
+                                }
+                            } else {
+                                cultures += " "
+                            }
+                            square_real += reportDetail.geozone.square_real + " "
+                            geozone_group_name += reportDetail.geozone.geozone_group_name + " ";
+
+                        } else {
+                            square_real += " ";
+                            geozone_group_name += " ";
+                        }
+
+                        reportDetail.type = type;
+                        reportDetail.geozone = geozone;
+                        reportDetail.time_in_field_exel = $filter('date')(reportDetail.time_in_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        reportDetail.time_out_field_exel = $filter('date')(reportDetail.time_out_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        reportDetail.time_out_field_exel1 = $filter('translate')($filter('secondsToDateTime')((reportDetail.time_out_field - reportDetail.time_in_field)));
+                        reportDetail.ignition_working_time_exel = $filter('translate')($filter('secondsToDateTime')(reportDetail.ignition_working_time));
+                        reportDetail.workingHoursExel = $filter('translate')($filter('secondsToDateTime')(reportDetail.workingHours));
+                        reportDetail.trailers = trailer;
+                        reportDetail.driver = driver;
+                        reportDetail.stop_num_exel = reportDetail.stop_num + "(" + $filter('translate')($filter('secondsToDateTime')(reportDetail.stop_time)) + ")";
+                        reportDetail.parking_num_exel = reportDetail.parking_num + "(" + $filter('translate')($filter('secondsToDateTime')(reportDetail.parking_time)) + ")";
+                        reportDetail.geozone_group_name = geozone_group_name;
+                        reportDetail.vehicle_group_name = serverData.vehicle_group_name;
+                        reportDetail.unit = unit;
+                        reportDetail.square_real = square_real;
+                        reportDetail.cultures = cultures;
+                        reportDetail.going_time_exel = $filter('secondsToDateTime')(reportDetail.going_time);
+                        reportDetail.stop_with_engine_time_exel = $filter('translate')($filter('secondsToDateTime')(reportDetail.ignition_working_time - reportDetail.going_time));
+                    }
+                    return serverData.reportDetailList;
+                },
+                byVehicleCar: function (data) {
+                    let serverData = $.extend(true, {}, data.data);
+
+                    for (var i = 0; i < serverData.reportDetailList.length; i++) {
+                        var reportDetail = serverData.reportDetailList[i]
+
+                        var type = "";
+                        if (reportDetail.isParking) {
+                            type += $filter('translate')('parking1');
+                        } else {
+                            type += $filter('translate')('going');
+                        }
+
+                        var adress = "";
+                        if (reportDetail.stopPoint != null) {
+                            adress += reportDetail.stopPoint.address;
+                        } else {
+                            adress += " ";
+                        }
+
+                        var driver = '';
+                        if (reportDetail.driver) {
+                            driver += reportDetail.driver.name;
+                        } else {
+                            driver += "-";
+                        }
+
+                        var geozone = "";
+                        if (reportDetail.stopPoint != null) {
+                            geozone += reportDetail.stopPoint.geozone_name ? reportDetail.stopPoint.geozone_name : '';
+                        } else {
+                            driver += " ";
+                        }
+
+                        reportDetail.type = type;
+                        reportDetail.time_in_field_exel = $filter('date')(reportDetail.time_in_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        reportDetail.time_out_field_exel = $filter('date')(reportDetail.time_out_field * 1000, 'dd.MM.yyyy HH:mm:ss');
+                        reportDetail.duration_exel = $filter('translate')($filter('secondsToDateTime')((reportDetail.time_out_field - reportDetail.time_in_field)));
+                        reportDetail.adress = adress;
+                        reportDetail.geozone = geozone;
+                        reportDetail.vehicle_name = serverData.vehicle_name;
+                        reportDetail.driver = driver;
+                    }
+                    return serverData.reportDetailList;
+                },
+                byFuelDetail: function (data) {
+                    let serverData = $.extend(true, {}, data.data);
+                    for (var i = 0; i < serverData.reportDetailList.length; i++) {
+                        var reportDetail = serverData.reportDetailList[i];
+                        console.log(reportDetail.workingHours)
+                        reportDetail.date_exel = $filter('date')(reportDetail.time_in_field * 1000, 'dd.MM.yyyy');
+                        reportDetail.going_time_exel = $filter('secondsToDateTime')(reportDetail.going_time);
+                        reportDetail.stop_with_engine_exel = $filter('translate')($filter('secondsToDateTime')((reportDetail.ignition_working_time - reportDetail.going_time)));
+                        reportDetail.parking_time_exel = $filter('translate')($filter('secondsToDateTime')(reportDetail.parking_time));
+                        reportDetail.workingHoursExel = $filter('translate')($filter('secondsToDateTime')(reportDetail.ignition_working_time));
+                    }
+                    return serverData.reportDetailList;
+                },
+                byVehicleGroup: function (data) {
+                    let serverData = $.extend(true, {}, data.data);
+
+                    serverData.reportDetail.sort(function (a, b) {
+                        if (a.vehicle_name.substr(0, 1).toUpperCase() == 'І' || a.vehicle_name.substr(0, 1).toUpperCase() == 'Є' || a.vehicle_name.substr(0, 1).toUpperCase() == 'Ї') {
+                            return 1;
+                        }
+
+                        if (b.vehicle_name.substr(0, 1).toUpperCase() == 'І' || b.vehicle_name.substr(0, 1).toUpperCase() == 'Є' || b.vehicle_name.substr(0, 1).toUpperCase() == 'Ї') {
+                            return -1;
+                        }
+                        if ($filter('lowercase')(a.vehicle_name) < $filter('lowercase')(b.vehicle_name)) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')(a.vehicle_name) > $filter('lowercase')(b.vehicle_name)) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    for (var i = 0; i < serverData.reportDetail.length; i++) {
+                        var reportDetail = serverData.reportDetail[i]
+                        reportDetail.distance_exel = $filter('number')(reportDetail.distance - reportDetail.distance1, 2);
+                        reportDetail.ignition_working_time_go_exel = $filter('translate')($filter('secondsToDateTime')(reportDetail.ignition_working_time_go));
+                    }
+                    return serverData.reportDetail;
+                },
+                byRoute: function (data, callScope) {
+                    let serverData = $.extend(true, {}, data.data);
+                    serverData.reportDetail.sort(function (a, b) {
+                        if (a.vehicle_name < b.vehicle_name) {
+                            return -1;
+                        }
+                        if (a.vehicle_name > b.vehicle_name) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (var i = 0; i < serverData.reportDetail.length; i++) {
+                        var reportDetail = serverData.reportDetail[i];
+                        var notifications = "";
+
+                        for (var n = 0; n < reportDetail.notificationList.length; n++) {
+                            var notification = reportDetail.notificationList[n];
+                            notifications += $filter('date')(notification.tm, 'dd.MM.yyyy HH:mm:ss') + " " + callScope.getNotificationMessage(notification) + "\n";
+                        }
+                        reportDetail.notifications = notifications;
+                    }
+                    return serverData.reportDetail;
+                },
+                сropRotation: function (data, callScope) {
+                    let serverData = $.extend(true, [], data.data);
+
+                    serverData.sort((a, b) => {
+                        var geozoneGroupSort = parseInt(a.geozone_group_name.localeCompare(b.geozone_group_name));
+                        var geozoneSort = parseInt((a.geozone_name).localeCompare(b.geozone_name));
+                        if (geozoneGroupSort !== 0) {
+                            return geozoneGroupSort;
+                        }
+                        return geozoneSort;
+                    })
+
+
+                    for (let i = 0; i < serverData.length; i++) {
+                        for (let d = 0; d < serverData[i].detailList.length; d++) {
+                            let item = serverData[i].detailList[d];
+                            let cultureNames = '';
+                            for (let l = 0; l < item.detail2List.length; l++) {
+                                let record = item.detail2List[l];
+                                if (item.detail2List.length === 1 || l === 0) {
+                                    cultureNames = $filter('translate')(record.culture.name) + (record.seed ? (" (" + $filter('translate')(record.seed.name) + ") ") : '');
+                                } else if (l !== 0) {
+                                    cultureNames += " \n\r" + $filter('translate')(record.culture.name) + (record.seed ? (" (" + $filter('translate')(record.seed.name) + ") ") : '');
+                                }
+                            }
+                            serverData[i]['col' + (d + 1)] = cultureNames
+                        }
+                    }
+                    console.log(serverData)
+                    return serverData;
+                },
+                vehicleTaskAgronom: function (data, callScope) {
+                    let serverData = $.extend(true, [], data.data.repData);
+
+                    serverData.sort(function (a, b) {
+                        if ($filter('lowercase')($filter('translate')(a.agronom ? a.agronom.name : 'я')) < $filter('lowercase')($filter('translate')(b.agronom ? b.agronom.name : 'я'))) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')($filter('translate')(a.agronom ? a.agronom.name : 'я')) > $filter('lowercase')($filter('translate')(b.agronom ? b.agronom.name : 'я'))) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    for (let i = 0; i < serverData.length; i++) {
+                        var item = serverData[i];
+                        item['agronomNameExel'] = item.agronom ? item.agronom.name : $filter('translate')('agronom.not.setting');
+                        item['squareAgronomExel'] = $filter('number')(item.square_by_agronom, 2);
+                        item['squareExel'] = $filter('number')(item.square_vehicle_working, 2);
+                        item.workTypeList.sort(function (a, b) {
+                            if ($filter('lowercase')($filter('translate')(a.workType ? a.workType.name : 'я')) < $filter('lowercase')($filter('translate')(b.workType ? b.workType.name : 'я'))) {
+                                return -1;
+                            }
+                            if ($filter('lowercase')($filter('translate')(a.workType ? a.workType.name : 'я')) > $filter('lowercase')($filter('translate')(b.workType ? b.workType.name : 'я'))) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let w = 0; w < item.workTypeList.length; w++) {
+                            let workTypeItem = item.workTypeList[w];
+                            workTypeItem.geozoneGroupList.sort(function (a, b) {
+                                if ($filter('lowercase')($filter('translate')(a.geozoneGroup ? a.geozoneGroup.name : 'я')) < $filter('lowercase')($filter('translate')(b.geozoneGroup ? b.geozoneGroup.name : 'я'))) {
+                                    return -1;
+                                }
+                                if ($filter('lowercase')($filter('translate')(a.geozoneGroup ? a.geozoneGroup.name : 'я')) > $filter('lowercase')($filter('translate')(b.geozoneGroup ? b.geozoneGroup.name : 'я'))) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+                            workTypeItem['workTypeNameExel'] = workTypeItem.workType ? $filter('translate')(workTypeItem.workType.name) : $filter('translate')('workType.not.setting');
+                            workTypeItem['squareAgronomExel'] = $filter('number')(workTypeItem.square_by_agronom, 2);
+                            workTypeItem['squareExel'] = $filter('number')(workTypeItem.square_vehicle_working, 2);
+
+                            for (let g = 0; g < workTypeItem.geozoneGroupList.length; g++) {
+                                let geozoneGroupItem = workTypeItem.geozoneGroupList[g];
+                                geozoneGroupItem['geozoneGroupNameExel'] = geozoneGroupItem.geozoneGroup ? geozoneGroupItem.geozoneGroup.name : $filter('translate')('without.group');
+                                geozoneGroupItem['squareExel'] = $filter('number')(geozoneGroupItem.square, 2);
+                                geozoneGroupItem['squareAgronomExel'] = $filter('number')(geozoneGroupItem.square_by_agronom, 2);
+
+                                geozoneGroupItem.geozoneList.sort(function (a, b) {
+                                    if ($filter('lowercase')($filter('translate')(a.geozone ? a.geozone.name : 'я')) < $filter('lowercase')($filter('translate')(b.geozone ? b.geozone.name : 'я'))) {
+                                        return -1;
+                                    }
+                                    if ($filter('lowercase')($filter('translate')(a.geozone ? a.geozone.name : 'я')) > $filter('lowercase')($filter('translate')(b.geozone ? b.geozone.name : 'я'))) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                });
+                                for (let e = 0; e < geozoneGroupItem.geozoneList.length; e++) {
+                                    let geozoneItem = geozoneGroupItem.geozoneList[e];
+                                    geozoneItem['geozoneNameExel'] = geozoneItem.geozone ? geozoneItem.geozone.name : '';
+                                    geozoneItem['squareAgronomExel'] =  $filter('number')(geozoneItem.square_by_agronom, 2);
+                                    geozoneItem['squareExel'] = $filter('number')(geozoneItem.square_vehicle_working, 2);
+                                }
+                            }
+                        }
                     }
 
-                    this.loadXlsDefer = $q.defer();
+                    return serverData;
+                },
+                vehicleTaskBySource: function (data) {
+                    let serverData = $.extend(true, [], data.data);
 
-                    var lng = $translate.use();
-                    //if (lng=='ukr'){lng='uk'}
-                    postData.lng = lng;
-                    $http.post("/xls", postData, {
-                        timeout: this.loadXlsDefer.promise,
-                        responseType: 'arraybuffer'
-                    }).success(function (data) {
-                        var blob = new Blob([data], {
-                            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                        });
-                        saveAs(blob, filename || 'report' + '.xlsx');
-                    })
-                        .error(function (data) {
+                    serverData.sort(function (a, b) {
+                        if ($filter('lowercase')($filter('translate')(a.date_start)) < $filter('lowercase')($filter('translate')(b.date_start))) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')($filter('translate')(a.date_start)) > $filter('lowercase')($filter('translate')(b.date_start))) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    for (let i = 0; i < serverData.length; i++) {
+                        var vehicleTask = serverData[i];
+                        vehicleTask['date_start_exel'] = $filter('date')(vehicleTask['date_start'], 'dd.MM.yyyy HH:mm');
+                        vehicleTask['date_end_exel'] = $filter('date')(vehicleTask['date_end'], 'dd.MM.yyyy HH:mm');
+                        vehicleTask['workTypeNameExel'] = $filter('translate')(vehicleTask.workType ? vehicleTask.workType.name : '');
+                        if (!vehicleTask['plan_square']) {
+                            vehicleTask['plan_square'] = ''
+                        }
+                        if (!vehicleTask['plan_fuel_used']) {
+                            vehicleTask['plan_fuel_used'] = ''
+                        }
+                        if (!vehicleTask['fact_square']) {
+                            vehicleTask['fact_square'] = ''
+                        }
+                        if (!vehicleTask['fact_fuel_used']) {
+                            vehicleTask['fact_fuel_used'] = ''
+                        }
+                        if (!vehicleTask['engineerName']) {
+                            vehicleTask['engineerName'] = ''
+                        }
+                        if (!vehicleTask['agronomName']) {
+                            vehicleTask['agronomName'] = ''
+                        }
+                        let geozoneExel = "";
+                        for (let i = 0; i < vehicleTask.geozoneList.length; i++) {
+                            if (geozoneExel === "") {
+                                geozoneExel += vehicleTask.geozoneList[i].name;
+                            } else {
+                                geozoneExel += ", " + vehicleTask.geozoneList[i].name;
+                            }
+                        }
+                        let geozoneGroupExel = "";
+                        for (let i = 0; i < vehicleTask.geozoneAllGroupList.length; i++) {
+                            if (geozoneGroupExel === "") {
+                                geozoneGroupExel += vehicleTask.geozoneAllGroupList[i].name;
+                            } else {
+                                geozoneGroupExel += ", " + vehicleTask.geozoneAllGroupList[i].name;
+                            }
+                        }
+                        vehicleTask['geozoneExel'] = geozoneExel;
+                        vehicleTask['geozoneGroupExel'] = geozoneGroupExel;
+                    }
+                    return serverData;
+                },
+                timesheetReportDetail: function (data) {
+                    let serverData = $.extend(true, [], data);
+                    console.log(serverData)
+                    serverData.sort(function (a, b) {
+                        if (a.timesheetUser.fio.localeCompare(b.timesheetUser.fio) < b.timesheetUser.fio.localeCompare(a.timesheetUser.fio)) {
+                            return -1;
+                        }
+                        if (a.timesheetUser.fio.localeCompare(b.timesheetUser.fio) > b.timesheetUser.fio.localeCompare(a.timesheetUser.fio)) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let i = 0; i < serverData.length; i++) {
+                        let item = serverData[i];
+                        item['number'] = i + 1;
+                        for (let variable in item) {
+
+                            if (Object.keys(item[variable]).length !== 0) {
+                                item[variable].val = item[variable].val ? item[variable].val : '';
+                                if (item[variable].cls === 'weekend') {
+                                    item[variable].val = item[variable].val ? "B/" + item[variable].val : 'B';
+                                }
+                                if (item[variable].absent_title !== '') {
+                                    item[variable].val = item[variable].absent_title;
+                                }
+                            }
+                        }
+                    }
+
+                    console.log(serverData);
+                    return serverData;
+                },
+                grainToFarmConsolidatedCar: function (data, callScope) {
+                    let serverData = $.extend(true, {}, data.data);
+                    serverData.repData.sort(function (a, b) {
+                        if (a.vehicle_name < b.vehicle_name) {
+                            return -1;
+                        }
+                        if (a.vehicle_name > b.vehicle_name) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (var i = 0; i < serverData.repData.length; i++) {
+                        var reportDetail = serverData.repData[i];
+
+                        reportDetail.time_going_exel = $filter('secondsToDateTime')(reportDetail.time_going);
+                    }
+                    return serverData.repData;
+                },
+                sendRequest:
+
+                    function (postData, filename) {
+                        var self = this;
+
+                        if (this.loadXlsDefer && this.loadXlsDefer != null) {
+                            return;
+                        }
+
+                        this.loadXlsDefer = $q.defer();
+
+                        var lng = $translate.use();
+                        //if (lng=='ukr'){lng='uk'}
+                        postData.lng = lng;
+                        return $http.post("/xls", postData, {
+                            timeout: this.loadXlsDefer.promise,
+                            responseType: 'arraybuffer'
+                        }).success(function (data) {
+                            var blob = new Blob([data], {
+                                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            });
+                            saveAs(blob, filename || 'report' + '.xlsx');
                         })
-                        .finally(function (data) {
-                            self.loadXlsDefer = null;
-                        })
-                }
+                            .error(function (data) {
+                            })
+                            .finally(function (data) {
+                                self.loadXlsDefer = null;
+                            })
+                    }
             }
             return xls;
         }
