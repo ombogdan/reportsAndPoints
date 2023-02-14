@@ -484,6 +484,13 @@ angular.module('agro.utils.xls', ['ngResource'])
                                 farm_name: grainToFarmConsolidatedCar.farm_name
                             }
                             break;
+                        case "agrooperationPlan":
+                            postData.data = this.agrooperationPlan(data, callScope);
+                            let agrooperationPlan = data.data;
+                            postData.params = {
+                                year: agrooperationPlan.year
+                            }
+                            break;
                         default:
                             postData = {}
                     }
@@ -2773,6 +2780,71 @@ angular.module('agro.utils.xls', ['ngResource'])
                         reportDetail.time_going_exel = $filter('secondsToDateTime')(reportDetail.time_going);
                     }
                     return serverData.repData;
+                },
+                agrooperationPlan: function (data) {
+                    let serverData = $.extend(true, [], data.data.repData);
+
+                    serverData.sort(function (a, b) {
+                        if ($filter('lowercase')($filter('translate')(a.agronom ? a.agronom.name : 'я')) < $filter('lowercase')($filter('translate')(b.agronom ? b.agronom.name : 'я'))) {
+                            return -1;
+                        }
+                        if ($filter('lowercase')($filter('translate')(a.agronom ? a.agronom.name : 'я')) > $filter('lowercase')($filter('translate')(b.agronom ? b.agronom.name : 'я'))) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    for (let i = 0; i < serverData.length; i++) {
+                        var item = serverData[i];
+                        item['cultureNameExel'] = item.culture ? $filter('translate')(item.culture.name) : $filter('translate')('culture.not.setting');
+                        item['squareTotalExel'] = $filter('number')(item.total_square, 2);
+                        item.workTypeList.sort(function (a, b) {
+                            if ($filter('lowercase')($filter('translate')(a.workType ? a.workType.name : 'я')) < $filter('lowercase')($filter('translate')(b.workType ? b.workType.name : 'я'))) {
+                                return -1;
+                            }
+                            if ($filter('lowercase')($filter('translate')(a.workType ? a.workType.name : 'я')) > $filter('lowercase')($filter('translate')(b.workType ? b.workType.name : 'я'))) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let w = 0; w < item.workTypeList.length; w++) {
+                            let workTypeItem = item.workTypeList[w];
+                            workTypeItem.geozoneGroupList.sort(function (a, b) {
+                                if ($filter('lowercase')($filter('translate')(a.geozoneGroup ? a.geozoneGroup.name : 'я')) < $filter('lowercase')($filter('translate')(b.geozoneGroup ? b.geozoneGroup.name : 'я'))) {
+                                    return -1;
+                                }
+                                if ($filter('lowercase')($filter('translate')(a.geozoneGroup ? a.geozoneGroup.name : 'я')) > $filter('lowercase')($filter('translate')(b.geozoneGroup ? b.geozoneGroup.name : 'я'))) {
+                                    return 1;
+                                }
+                                return 0;
+                            });
+                            workTypeItem['workTypeNameExel'] = workTypeItem.workType ? $filter('translate')(workTypeItem.workType.name) : $filter('translate')('workType.not.setting');
+                            workTypeItem['squareTotalExel'] = $filter('number')(workTypeItem.total_square, 2);
+
+                            for (let g = 0; g < workTypeItem.geozoneGroupList.length; g++) {
+                                let geozoneGroupItem = workTypeItem.geozoneGroupList[g];
+                                geozoneGroupItem['geozoneGroupNameExel'] = geozoneGroupItem.geozoneGroup ? geozoneGroupItem.geozoneGroup.name : $filter('translate')('without.group');
+                                geozoneGroupItem['squareTotalExel'] = $filter('number')(geozoneGroupItem.total_square, 2);
+
+                                geozoneGroupItem.geozoneList.sort(function (a, b) {
+                                    if ($filter('lowercase')($filter('translate')(a.geozone ? a.geozone.name : 'я')) < $filter('lowercase')($filter('translate')(b.geozone ? b.geozone.name : 'я'))) {
+                                        return -1;
+                                    }
+                                    if ($filter('lowercase')($filter('translate')(a.geozone ? a.geozone.name : 'я')) > $filter('lowercase')($filter('translate')(b.geozone ? b.geozone.name : 'я'))) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                });
+                                for (let e = 0; e < geozoneGroupItem.geozoneList.length; e++) {
+                                    let geozoneItem = geozoneGroupItem.geozoneList[e];
+                                    geozoneItem['geozoneNameExel'] = geozoneItem.geozone ? geozoneItem.geozone.name : '';
+                                    geozoneItem['squareTotalExel'] =  $filter('number')(geozoneItem.plan_square, 2);
+                                }
+                            }
+                        }
+                    }
+
+                    return serverData;
                 },
                 sendRequest:
 

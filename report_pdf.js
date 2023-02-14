@@ -5813,7 +5813,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('fuel.percent_drt'), style: 'tableHeader'},
                 {'text': $filter('translate')('fuel.diff_drt'), style: 'tableHeader'},
                 {'text': $filter('translate')('fuel.percent_dut'), style: 'tableHeader'},
-                {'text': $filter('translate')('fuel.diff_dut'), style: 'tableHeader'}]);
+                {'text': $filter('translate')('fuel.diff_dut'), style: 'tableHeader'}
+            ]);
 
             for (var i = 0; i < rep.repDetail.length; i++) {
                 var detail = rep.repDetail[i];
@@ -5857,6 +5858,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                         'text': $filter('number')(params.scope.getTotal(rep.repDetail, 'distance'), 0),
                         style: 'header'
                     },
+                    {},
                     {},
                     {},
                     {
@@ -11134,89 +11136,37 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             var temperature_ground_table = [];
             var temperature_air_avg_table = [];
             var temperature_ground_avg_table = [];
-
+            var header_table = [];
             var content_detail = [];
 
-            precipitation_table.push([
-                {'text': $filter('translate')('meteo'), style: 'tableHeader'},
-                {'text': $filter('translate')('January'), style: 'tableHeader'},
-                {'text': $filter('translate')('February'), style: 'tableHeader'},
-                {'text': $filter('translate')('March'), style: 'tableHeader'},
-                {'text': $filter('translate')('April'), style: 'tableHeader'},
-                {'text': $filter('translate')('May'), style: 'tableHeader'},
-                {'text': $filter('translate')('June'), style: 'tableHeader'},
-                {'text': $filter('translate')('July'), style: 'tableHeader'},
-                {'text': $filter('translate')('August'), style: 'tableHeader'},
-                {'text': $filter('translate')('September'), style: 'tableHeader'},
-                {'text': $filter('translate')('October'), style: 'tableHeader'},
-                {'text': $filter('translate')('November'), style: 'tableHeader'},
-                {'text': $filter('translate')('December'), style: 'tableHeader'},
-                {'text': "", style: 'tableHeader'}
-            ]);
+            header_table.push({'text': $filter('translate')('meteo'), style: 'tableHeader'});
+            rep.monthList.map((item)=>{
+                header_table.push({'text': item.name, style: 'tableHeader'},)
+            })
 
-            temperature_air_table.push([
-                {'text': $filter('translate')('meteo'), style: 'tableHeader'},
-                {'text': $filter('translate')('January'), style: 'tableHeader'},
-                {'text': $filter('translate')('February'), style: 'tableHeader'},
-                {'text': $filter('translate')('March'), style: 'tableHeader'},
-                {'text': $filter('translate')('April'), style: 'tableHeader'},
-                {'text': $filter('translate')('May'), style: 'tableHeader'},
-                {'text': $filter('translate')('June'), style: 'tableHeader'},
-                {'text': $filter('translate')('July'), style: 'tableHeader'},
-                {'text': $filter('translate')('August'), style: 'tableHeader'},
-                {'text': $filter('translate')('September'), style: 'tableHeader'},
-                {'text': $filter('translate')('October'), style: 'tableHeader'},
-                {'text': $filter('translate')('November'), style: 'tableHeader'},
-                {'text': $filter('translate')('December'), style: 'tableHeader'}
-            ]);
+            precipitation_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
+            rep.monthList.map((item)=>{
+                precipitation_table[0].push({'text': item.name, style: 'tableHeader'},)
+            });
+            precipitation_table[0].push({'text': '', style: 'tableHeader'});
 
-            temperature_ground_table.push([
-                {'text': $filter('translate')('meteo'), style: 'tableHeader'},
-                {'text': $filter('translate')('January'), style: 'tableHeader'},
-                {'text': $filter('translate')('February'), style: 'tableHeader'},
-                {'text': $filter('translate')('March'), style: 'tableHeader'},
-                {'text': $filter('translate')('April'), style: 'tableHeader'},
-                {'text': $filter('translate')('May'), style: 'tableHeader'},
-                {'text': $filter('translate')('June'), style: 'tableHeader'},
-                {'text': $filter('translate')('July'), style: 'tableHeader'},
-                {'text': $filter('translate')('August'), style: 'tableHeader'},
-                {'text': $filter('translate')('September'), style: 'tableHeader'},
-                {'text': $filter('translate')('October'), style: 'tableHeader'},
-                {'text': $filter('translate')('November'), style: 'tableHeader'},
-                {'text': $filter('translate')('December'), style: 'tableHeader'}
-            ]);
 
-            temperature_air_avg_table.push([
-                {'text': $filter('translate')('meteo'), style: 'tableHeader'},
-                {'text': $filter('translate')('January'), style: 'tableHeader'},
-                {'text': $filter('translate')('February'), style: 'tableHeader'},
-                {'text': $filter('translate')('March'), style: 'tableHeader'},
-                {'text': $filter('translate')('April'), style: 'tableHeader'},
-                {'text': $filter('translate')('May'), style: 'tableHeader'},
-                {'text': $filter('translate')('June'), style: 'tableHeader'},
-                {'text': $filter('translate')('July'), style: 'tableHeader'},
-                {'text': $filter('translate')('August'), style: 'tableHeader'},
-                {'text': $filter('translate')('September'), style: 'tableHeader'},
-                {'text': $filter('translate')('October'), style: 'tableHeader'},
-                {'text': $filter('translate')('November'), style: 'tableHeader'},
-                {'text': $filter('translate')('December'), style: 'tableHeader'}
-            ]);
+            temperature_air_table.push(header_table);
 
-            temperature_ground_avg_table.push([
-                {'text': $filter('translate')('meteo'), style: 'tableHeader'},
-                {'text': $filter('translate')('January'), style: 'tableHeader'},
-                {'text': $filter('translate')('February'), style: 'tableHeader'},
-                {'text': $filter('translate')('March'), style: 'tableHeader'},
-                {'text': $filter('translate')('April'), style: 'tableHeader'},
-                {'text': $filter('translate')('May'), style: 'tableHeader'},
-                {'text': $filter('translate')('June'), style: 'tableHeader'},
-                {'text': $filter('translate')('July'), style: 'tableHeader'},
-                {'text': $filter('translate')('August'), style: 'tableHeader'},
-                {'text': $filter('translate')('September'), style: 'tableHeader'},
-                {'text': $filter('translate')('October'), style: 'tableHeader'},
-                {'text': $filter('translate')('November'), style: 'tableHeader'},
-                {'text': $filter('translate')('December'), style: 'tableHeader'}
-            ]);
+            temperature_ground_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
+            rep.monthList.map((item)=>{
+                temperature_ground_table[0].push({'text': item.name, style: 'tableHeader'},)
+            });
+
+            temperature_air_avg_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
+            rep.monthList.map((item)=>{
+                temperature_air_avg_table[0].push({'text': item.name, style: 'tableHeader'},)
+            });
+
+            temperature_ground_avg_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
+            rep.monthList.map((item)=>{
+                temperature_ground_avg_table[0].push({'text': item.name, style: 'tableHeader'},)
+            });
 
             rep.repDetail.sort(function (a, b) {
                 if ($filter('lowercase')(a.meteo.name) < $filter('lowercase')(b.meteo.name)) {
@@ -11231,88 +11181,37 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             for (var i = 0; i < rep.repDetail.length; i++) {
                 var data = rep.repDetail[i];
 
-                precipitation_table.push([
-                    {'text': data.meteo.name, style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[0], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[1], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[2], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[3], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[4], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[5], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[6], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[7], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[8], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[9], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[10], 3), style: 'td'},
-                    {'text': $filter('number')(data.precipitationList[11], 3), style: 'td'},
-                    {'text': $filter('number')(params.scope.summByArray(data.precipitationList), 3), style: 'td'}
-                ]);
+                precipitation_table.push([{'text': data.meteo.name, style: 'td'}]);
+                rep.monthList.map((item)=>{
+                    precipitation_table[i+1].push({'text': $filter('number')(data.precipitationList[item.id], 3), style: 'td'},)
+                });
+                precipitation_table[i+1].push([{'text': $filter('number')(params.scope.summByArray(data.precipitationList), 3), style: 'td'}]);
 
-                temperature_air_table.push([
-                    {'text': data.meteo.name, style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[0], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[1], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[2], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[3], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[4], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[5], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[6], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[7], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[8], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[9], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[10], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirList[11], 1), style: 'td'}
-                ]);
 
-                temperature_ground_table.push([
-                    {'text': data.meteo.name, style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[0], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[1], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[2], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[3], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[4], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[5], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[6], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[7], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[8], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[9], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[10], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundList[11], 1), style: 'td'}
-                ]);
+                temperature_air_table.push([{'text': data.meteo.name, style: 'td'}]);
+                rep.monthList.map((item)=>{
+                    temperature_air_table[i+1].push({'text': $filter('number')(data.temperatureAirList[item.id], 3), style: 'td'},)
+                });
 
-                temperature_air_avg_table.push([
-                    {'text': data.meteo.name, style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[0], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[1], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[2], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[3], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[4], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[5], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[6], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[7], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[8], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[9], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[10], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureAirAvgList[11], 1), style: 'td'}
-                ]);
 
-                temperature_ground_avg_table.push([
-                    {'text': data.meteo.name, style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[0], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[1], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[2], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[3], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[4], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[5], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[6], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[7], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[8], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[9], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[10], 1), style: 'td'},
-                    {'text': $filter('number')(data.temperatureGroundAvgList[11], 1), style: 'td'}
-                ]);
+                temperature_ground_table.push([{'text': data.meteo.name, style: 'td'}]);
+                rep.monthList.map((item)=>{
+                    temperature_ground_table[i+1].push({'text': $filter('number')(data.temperatureGroundList[item.id], 3), style: 'td'},)
+                });
+
+
+                temperature_air_avg_table.push([{'text': data.meteo.name, style: 'td'}]);
+                rep.monthList.map((item)=>{
+                    temperature_air_avg_table[i+1].push({'text': $filter('number')(data.temperatureAirAvgList[item.id], 3), style: 'td'},)
+                });
+
+
+                temperature_ground_avg_table.push([{'text': data.meteo.name, style: 'td'}]);
+                rep.monthList.map((item)=>{
+                    temperature_ground_avg_table[i+1].push({'text': $filter('number')(data.temperatureGroundAvgList[item.id], 3), style: 'td'},)
+                });
             }
-
+            console.log(temperature_ground_table)
             content_detail.push(
                 {
                     'text': $filter('translate')('precipitation'),
@@ -11323,7 +11222,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     color: '#444',
                     margin: [0, 0, 0, 20],
                     table: {
-                        widths: [70, 40, 40, 40, 40, 40, 50, 50, 50, 50, 50, 50, 50, 50],
+                        widths: [70, 50, 40, 40, 40, 40, 50, 50, 50, 50, 50, 50, 50, 50],
                         heights: 20,
                         body: precipitation_table,
                         alignment: 'center',
@@ -13459,6 +13358,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             table_body.push([
                 {'text': $filter('translate')('fio'), style: 'tableHeader'},
+                {'text': $filter('translate')('contractor.owner'), style: 'tableHeader'},
                 {'text': $filter('translate')('imei'), style: 'tableHeader'},
                 {'text': $filter('translate')('phone'), style: 'tableHeader'},
                 {'text': $filter('translate')('group'), style: 'tableHeader'}
@@ -13467,6 +13367,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 var data = rep.dataList[i];
                 table_body.push([
                     {'text': data.name, style: 'td'},
+                    {'text': data.contractor_name, style: 'td'},
                     {'text': data.imei, style: 'td'},
                     {'text': data.phone, style: 'td'},
                     {'text': data.group_name, style: 'td'}
@@ -13489,7 +13390,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     color: '#444',
                     margin: [0, 0, 0, 20],
                     table: {
-                        widths: [130, 130, 125, 125],
+                        widths: [110, 100, 70, 115, 115],
                         heights: 20,
                         body: table_body,
                         alignment: 'center',
@@ -13554,6 +13455,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             table_body.push([
                 {'text': $filter('translate')('name'), style: 'tableHeader'},
+                {'text': $filter('translate')('contractor.owner'), style: 'tableHeader'},
                 {'text': $filter('translate')('width'), style: 'tableHeader'},
                 {'text': $filter('translate')('count.width'), style: 'tableHeader'},
                 {'text': $filter('translate')('worktypes'), style: 'tableHeader'},
@@ -13573,6 +13475,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
                 table_body.push([
                     {'text': data.name, style: 'td'},
+                    {'text': data.contractor_name, style: 'td'},
                     {'text': data.real_width, style: 'td'},
                     {'text': data.width, style: 'td'},
                     {'text': data.worktype ? data.worktype.name : data.worktype, style: 'td'},
@@ -13597,7 +13500,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     color: '#444',
                     margin: [0, 0, 0, 20],
                     table: {
-                        widths: [120, 45, 55, 95, 45, 135],
+                        widths: [80, 60, 45, 55, 95, 45, 115],
                         heights: 20,
                         body: table_body,
                         alignment: 'center',
@@ -13678,7 +13581,9 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 {'text': $filter('translate')('phone'), style: 'tableHeader'},
                 {'text': $filter('translate')('vehicle.state.number'), style: 'tableHeader'},
                 {'text': $filter('translate')('vehicle.model'), style: 'tableHeader'},
-                {'text': $filter('translate')('group'), style: 'tableHeader'}
+                {'text': $filter('translate')('group'), style: 'tableHeader'},
+                {'text': $filter('translate')('driver'), style: 'tableHeader'},
+                {'text': $filter('translate')('phone'), style: 'tableHeader'}
             ]);
 
             let sortArray = fieldSort(rep.dataList, ["group_name", "vehicle_name"])
@@ -13696,6 +13601,8 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {'text': data.state_number, style: 'td'},
                     {'text': data.model, style: 'td'},
                     {'text': data.group_name, style: 'td'},
+                    {'text': data.driver_name, style: 'td'},
+                    {'text': data.driver_phone, style: 'td'},
                 ]);
             }
 
@@ -13715,7 +13622,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     color: '#444',
                     margin: [0, 0, 0, 20],
                     table: {
-                        widths: [65, 65, 55, 55, 50, 50, 55, 50, 55],
+                        widths: [70, 70, 60, 60, 70, 60, 60, 60, 70, 70, 70],
                         heights: 20,
                         body: table_body,
                         alignment: 'center',
@@ -13741,6 +13648,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 content: [
                     content_detail
                 ],
+                pageOrientation: 'landscape',
                 styles: {
                     tableHeader: {
                         alignment: 'center',

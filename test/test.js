@@ -23,7 +23,7 @@ client.connect({ port: port, host: host }, function() {
     // 351513052296107  ford іващенко
     // 13226009700069  piven  txt
 
-    var data = '860157042840170'+';NA;';
+    var data = '860906043060463'+';NA;';
     // var data = '123456789011'+';NA;';
     var crc = calc_crc16(data);
 
