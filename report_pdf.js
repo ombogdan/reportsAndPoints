@@ -139,8 +139,10 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 landBankDashboardDetail(rep, params)
             } else if (type == 'vehicleTaskAgronom') {
                 vehicleTaskAgronom(rep, params)
-            }  else if (type == 'grainToFarmConsolidatedCar') {
+            } else if (type == 'grainToFarmConsolidatedCar') {
                 grainToFarmConsolidatedCar(rep, params)
+            } else if (type == 'meteoSumTemperature') {
+                meteoSumTemperature(rep, params)
             } else {
                 console.log("Not Found " + type)
             }
@@ -10489,7 +10491,10 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                             style: 'td'
                         },
                         {'text': detail.comment, style: 'td'},
-                        {'text': detail.ttn +" "+(detail.distance ? "("+detail.distance+$filter('translate')('km')+")": ''), style: 'td'},
+                        {
+                            'text': detail.ttn + " " + (detail.distance ? "(" + detail.distance + $filter('translate')('km') + ")" : ''),
+                            style: 'td'
+                        },
                     ])
 
                 }
@@ -11140,12 +11145,12 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             var content_detail = [];
 
             header_table.push({'text': $filter('translate')('meteo'), style: 'tableHeader'});
-            rep.monthList.map((item)=>{
+            rep.monthList.map((item) => {
                 header_table.push({'text': item.name, style: 'tableHeader'},)
             })
 
             precipitation_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
-            rep.monthList.map((item)=>{
+            rep.monthList.map((item) => {
                 precipitation_table[0].push({'text': item.name, style: 'tableHeader'},)
             });
             precipitation_table[0].push({'text': '', style: 'tableHeader'});
@@ -11154,17 +11159,17 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             temperature_air_table.push(header_table);
 
             temperature_ground_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
-            rep.monthList.map((item)=>{
+            rep.monthList.map((item) => {
                 temperature_ground_table[0].push({'text': item.name, style: 'tableHeader'},)
             });
 
             temperature_air_avg_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
-            rep.monthList.map((item)=>{
+            rep.monthList.map((item) => {
                 temperature_air_avg_table[0].push({'text': item.name, style: 'tableHeader'},)
             });
 
             temperature_ground_avg_table.push([{'text': $filter('translate')('meteo'), style: 'tableHeader'}]);
-            rep.monthList.map((item)=>{
+            rep.monthList.map((item) => {
                 temperature_ground_avg_table[0].push({'text': item.name, style: 'tableHeader'},)
             });
 
@@ -11182,36 +11187,54 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                 var data = rep.repDetail[i];
 
                 precipitation_table.push([{'text': data.meteo.name, style: 'td'}]);
-                rep.monthList.map((item)=>{
-                    precipitation_table[i+1].push({'text': $filter('number')(data.precipitationList[item.id], 3), style: 'td'},)
+                rep.monthList.map((item) => {
+                    precipitation_table[i + 1].push({
+                        'text': $filter('number')(data.precipitationList[item.id], 3),
+                        style: 'td'
+                    },)
                 });
-                precipitation_table[i+1].push([{'text': $filter('number')(params.scope.summByArray(data.precipitationList), 3), style: 'td'}]);
+                precipitation_table[i + 1].push([{
+                    'text': $filter('number')(params.scope.summByArray(data.precipitationList), 3),
+                    style: 'td'
+                }]);
 
 
                 temperature_air_table.push([{'text': data.meteo.name, style: 'td'}]);
-                rep.monthList.map((item)=>{
-                    temperature_air_table[i+1].push({'text': $filter('number')(data.temperatureAirList[item.id], 3), style: 'td'},)
+                rep.monthList.map((item) => {
+                    temperature_air_table[i + 1].push({
+                        'text': $filter('number')(data.temperatureAirList[item.id], 3),
+                        style: 'td'
+                    },)
                 });
 
 
                 temperature_ground_table.push([{'text': data.meteo.name, style: 'td'}]);
-                rep.monthList.map((item)=>{
-                    temperature_ground_table[i+1].push({'text': $filter('number')(data.temperatureGroundList[item.id], 3), style: 'td'},)
+                rep.monthList.map((item) => {
+                    temperature_ground_table[i + 1].push({
+                        'text': $filter('number')(data.temperatureGroundList[item.id], 3),
+                        style: 'td'
+                    },)
                 });
 
 
                 temperature_air_avg_table.push([{'text': data.meteo.name, style: 'td'}]);
-                rep.monthList.map((item)=>{
-                    temperature_air_avg_table[i+1].push({'text': $filter('number')(data.temperatureAirAvgList[item.id], 3), style: 'td'},)
+                rep.monthList.map((item) => {
+                    temperature_air_avg_table[i + 1].push({
+                        'text': $filter('number')(data.temperatureAirAvgList[item.id], 3),
+                        style: 'td'
+                    },)
                 });
 
 
                 temperature_ground_avg_table.push([{'text': data.meteo.name, style: 'td'}]);
-                rep.monthList.map((item)=>{
-                    temperature_ground_avg_table[i+1].push({'text': $filter('number')(data.temperatureGroundAvgList[item.id], 3), style: 'td'},)
+                rep.monthList.map((item) => {
+                    temperature_ground_avg_table[i + 1].push({
+                        'text': $filter('number')(data.temperatureGroundAvgList[item.id], 3),
+                        style: 'td'
+                    },)
                 });
             }
-            console.log(temperature_ground_table)
+
             content_detail.push(
                 {
                     'text': $filter('translate')('precipitation'),
@@ -15017,6 +15040,27 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
                     {'text': prices, style: 'td'},
                 ]);
             }
+            table1_body.push([
+                {'text': $filter('translate')('total') + ":", style: 'header'},
+                {'text': '', style: 'td'},
+                {'text': '', style: 'tdLeft'},
+                {
+                    'text': $filter('number')(params.scope.summByArray1(rep.repData, 'distance_moving'), 1),
+                    style: 'header'
+                },
+                {
+                    'text': $filter('number')(params.scope.summByArray1(rep.repData, 'fuel_used_moving'), 1),
+                    style: 'header'
+                },
+                {'text': '', style: 'td'},
+                {'text': $filter('number')(params.scope.summByArray1(rep.repData, 'processed'), 1), style: 'header'},
+                {
+                    'text': $filter('number')(params.scope.summByArray1(rep.repData, 'fuel_used_processed'), 1),
+                    style: 'header'
+                },
+                {'text': '', style: 'td'},
+                {'text': '', style: 'td'},
+            ]);
 
             content_detail.push(
                 {
@@ -15649,7 +15693,7 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
 
             content_detail.push(
                 {
-                    'text': $filter('translate')('reportType') + ' ' + $filter('lowercase')($filter('translate')('report.grainToFarm.consolidated.car'))+": "+rep.farm_name,
+                    'text': $filter('translate')('reportType') + ' ' + $filter('lowercase')($filter('translate')('report.grainToFarm.consolidated.car')) + ": " + rep.farm_name,
                     alignment: 'center',
                     bold: 'true',
                 },
@@ -15715,6 +15759,211 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             }
         }
 
+        //Метео (сводный)
+        function meteoSumTemperature(rep, params, func) {
+            var temperature_sum_active_table = [];
+            var temperature_sum_effective_table = [];
+            var temperature_sum_chu_table = [];
+
+            var header_table = [];
+            var header_effective_table = [];
+            var header_chu_table = [];
+            var content_detail = [];
+            //Active-----
+            header_table.push({'text': $filter('translate')('meteo'), style: 'tableHeader'});
+            rep.monthList.map((item) => {
+                header_table.push({'text': item.name, style: 'tableHeader'},)
+            });
+            header_table.push({'text': $filter('translate')('total'), style: 'tableHeader'});
+            temperature_sum_active_table.push(header_table);
+
+            //Effective-----
+            header_effective_table.push({'text': $filter('translate')('meteo'), style: 'tableHeader'});
+            rep.monthList.map((item) => {
+                header_effective_table.push({'text': item.name, style: 'tableHeader'},)
+            });
+            header_effective_table.push({'text': $filter('translate')('total'), style: 'tableHeader'});
+            temperature_sum_effective_table.push(header_effective_table);
+            //chu-----
+            header_chu_table.push({'text': $filter('translate')('meteo'), style: 'tableHeader'});
+            rep.monthList.map((item) => {
+                header_chu_table.push({'text': item.name, style: 'tableHeader'},)
+            });
+            header_chu_table.push({'text': $filter('translate')('total'), style: 'tableHeader'});
+            temperature_sum_chu_table.push(header_chu_table);
+            //--------
+
+            rep.repDetail.sort(function (a, b) {
+                if ($filter('lowercase')(a.meteo.name) < $filter('lowercase')(b.meteo.name)) {
+                    return -1;
+                }
+                if ($filter('lowercase')(a.meteo.name) > $filter('lowercase')(b.meteo.name)) {
+                    return 1;
+                }
+                return 0;
+            });
+            for (let i = 0; i < rep.repDetail.length; i++) {
+                var data = rep.repDetail[i];
+                //Active-----
+                temperature_sum_active_table.push([{'text': data.meteo.name, style: 'td'}]);
+                data.temperatureList.map((item) => {
+                    temperature_sum_active_table[i + 1].push({
+                        'text': $filter('number')(item.active, 1),
+                        style: 'td'
+                    })
+                });
+                temperature_sum_active_table[i + 1].push([{
+                    'text': $filter('number')(params.scope.summByArray1(data.temperatureList, 'active'), 0),
+                    style: 'td'
+                }])
+
+                //Effective-----
+                temperature_sum_effective_table.push([{'text': data.meteo.name, style: 'td'}]);
+                data.temperatureList.map((item) => {
+                    temperature_sum_effective_table[i + 1].push({
+                        'text': $filter('number')(item.effective, 1),
+                        style: 'td'
+                    })
+                });
+                temperature_sum_effective_table[i + 1].push([{
+                    'text': $filter('number')(params.scope.summByArray1(data.temperatureList, 'effective'), 0),
+                    style: 'td'
+                }])
+
+                //chu-----
+                temperature_sum_chu_table.push([{'text': data.meteo.name, style: 'td'}]);
+                data.temperatureList.map((item) => {
+                    temperature_sum_chu_table[i + 1].push({
+                        'text': $filter('number')(item.chu, 1),
+                        style: 'td'
+                    })
+                });
+                temperature_sum_chu_table[i + 1].push([{
+                    'text': $filter('number')(params.scope.summByArray1(data.temperatureList, 'chu'), 0),
+                    style: 'td'
+                }])
+            }
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('report.temperature.summ.active'),
+                    alignment: 'left',
+                    bold: 'true',
+                    margin: [0, 0, 0, 5]
+                },
+                {
+                    color: '#444',
+                    margin: [0, 0, 0, 5],
+                    table: {
+                        widths: [50, 45, 45, 45, 45, 45, 45, 47, 47, 47, 47, 47, 47, 47, 47],
+                        heights: 20,
+                        body: temperature_sum_active_table,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                });
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('report.temperature.summ.effective'),
+                    alignment: 'left',
+                    bold: 'true',
+                    margin: [0, 0, 0, 5]
+                },
+                {
+                    color: '#444',
+                    margin: [0, 0, 0, 5],
+                    table: {
+                        widths: [50, 45, 45, 45, 45, 45, 45, 47, 47, 47, 47, 47, 47, 47, 47],
+                        heights: 20,
+                        body: temperature_sum_effective_table,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                });
+
+            content_detail.push(
+                {
+                    'text': $filter('translate')('report.temperature.summ.effective'),
+                    alignment: 'left',
+                    bold: 'true',
+                    margin: [0, 0, 0, 5]
+                },
+                {
+                    color: '#444',
+                    margin: [0, 0, 0, 5],
+                    table: {
+                        widths: [50, 45, 45, 45, 45, 45, 45, 47, 47, 47, 47, 47, 47, 47, 47],
+                        heights: 20,
+                        body: temperature_sum_chu_table,
+                        alignment: 'center',
+                        dontBreakRows: true,
+                    },
+                });
+
+            var content = {
+                info: {
+                    title: 'Agrocontrol',
+                    author: 'Agrocontrol',
+                    subject: '',
+                    keywords: '',
+                },
+                footer: {
+                    columns: [
+                        {'text': 'agrocontrol.net', alignment: 'right', margin: [10, 0, 20, 5]}
+                    ]
+                },
+                pageMargins: [5, 25, 5, 30],
+                extend: 'pdfHtml5',
+                pageSize: 'A4',
+                pageOrientation: 'landscape',
+                content: [
+                    {
+                        'text': $filter('translate')('reportType') + " " + $filter('lowercase')($filter('translate')('report.meteoSumTemperature')),
+                        alignment: 'center',
+                        bold: 'true',
+                    },
+                    {
+                        'text': $filter('date')(rep.datefrom * 1000, 'dd.MM.yyyy') + " - " + $filter('date')(rep.dateto * 1000, 'dd.MM.yyyy'),
+                        alignment: 'center',
+                        bold: 'true',
+                        margin: [0, 0, 0, 20]
+                    },
+                    content_detail,
+                ],
+
+                styles: {
+                    tableHeader: {
+                        alignment: 'center',
+                        fillColor: '#A9A9A9',
+                        color: 'black',
+                        fontSize: 9,
+                        bold: 'true'
+                    },
+                    td: {
+                        alignment: 'center',
+                        height: '100',
+                        fontSize: 8
+                    },
+                    header: {
+                        fontSize: 9,
+                        bold: 'true',
+                        color: 'black',
+                        alignment: 'center'
+                    }
+                }
+            };
+
+            if (func) {
+                const pdfDocGenerator = pdfMake.createPdf(content);
+                pdfDocGenerator.getBase64((data) => {
+                    func.call(this, data);
+                });
+            } else {
+                cratePdf(content);
+            }
+        }
+
         function cratePdf(data) {
             pdfMake.tableLayouts = {
                 exampleLayout: {
@@ -15742,7 +15991,6 @@ let factory = angular.module('agro.report.pdf', ['ngResource'])
             pdfMake.createPdf(data).download("report.pdf");
             console.timeEnd('pdf');
         }
-
 
         return {
             variable: "This is public",

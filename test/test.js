@@ -23,7 +23,7 @@ client.connect({ port: port, host: host }, function() {
     // 351513052296107  ford іващенко
     // 13226009700069  piven  txt
 
-    var data = '860906043060463'+';NA;';
+    var data = '356078111458960'+';NA;';
     // var data = '123456789011'+';NA;';
     var crc = calc_crc16(data);
 
@@ -50,7 +50,7 @@ client.on('data', function(chunk) {
         client.end();
     }
 
-    setTimeout(sendMessage, 3000);
+    setTimeout(sendMessage, 2000);
 
     // Request an end to the connection after the data has been received.
     //client.end();
